@@ -5,13 +5,19 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import ca.uhn.fhir.model.dstu2.composite.CodeableConceptDt;
+import ca.uhn.fhir.model.dstu2.composite.CodingDt;
+
 public class Concept {
 
+    public static final String SNOMED_CT_SYSTEM_URI = "http://snomed.info/sct";
     private long id;
     private String fullSpecifiedName;
     private String preferredTerm;
     private Map<Long, Set<Relationship>> relationshipGroups = new HashMap<>();
     private Set<Concept> parents = new HashSet<>();
+    private CodeableConceptDt codableConceptDt;
+    private CodingDt codingDt;
 
     public Concept(long id) {
         this.id = id;
@@ -59,5 +65,20 @@ public class Concept {
 
     public void setParents(Set<Concept> parents) {
         this.parents = parents;
+    }
+
+    public CodeableConceptDt toCodeableConceptDt() {
+        if (codableConceptDt == null) {
+            codableConceptDt = new CodeableConceptDt(SNOMED_CT_SYSTEM_URI, Long.toString(getId()));
+        }
+        return codableConceptDt;
+    }
+
+    public CodingDt toCodingDt() {
+        if (codingDt == null) {
+            codingDt = new CodingDt(SNOMED_CT_SYSTEM_URI, Long.toString(getId()));
+            codingDt.setDisplay(getPreferredTerm());
+        }
+        return codingDt;
     }
 }

@@ -1,50 +1,127 @@
 package amt2fhir;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.function.Consumer;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystems;
+import java.util.HashMap;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.model.api.IValueSetEnumBinder;
+import ca.uhn.fhir.model.dstu2.composite.BoundCodeableConceptDt;
+import ca.uhn.fhir.model.dstu2.composite.QuantityDt;
+import ca.uhn.fhir.model.dstu2.composite.RatioDt;
+import ca.uhn.fhir.model.dstu2.composite.ResourceReferenceDt;
+import ca.uhn.fhir.model.dstu2.resource.Medication;
+import ca.uhn.fhir.model.dstu2.resource.Medication.Product;
+import ca.uhn.fhir.model.dstu2.resource.Medication.ProductIngredient;
+import ca.uhn.fhir.model.dstu2.resource.Substance;
+import ca.uhn.fhir.model.dstu2.valueset.MedicationKindEnum;
+import ca.uhn.fhir.model.dstu2.valueset.SubstanceTypeEnum;
+import ca.uhn.fhir.parser.IParser;
 
 public class Amt2Fhir {
 
-    private static final String TERMINOLOGY_PATH = "src/main/resources/AMT_Release_AU1000168_20150531/RF2Release/Snapshot/Terminology/";
-    private static final String LANG_REFSET_PATH = "src/main/resources/AMT_Release_AU1000168_20150531/RF2Release/Snapshot/Refset/Language/der2_cRefset_LanguageSnapshot-en-AU_AU1000168_20150531.txt";
-    private static final String REFSET_PATH = "src/main/resources/AMT_Release_AU1000168_20150531/RF2Release/Snapshot/Refset/Content/";
+    public static void main(String args[]) throws IOException, URISyntaxException {
+        ConceptCache concepts = new ConceptCache(FileSystems.newFileSystem(
+            URI.create("jar:file:" + FileSystems.getDefault().getPath(args[0]).toAbsolutePath().toString()),
+            new HashMap<>()));
 
-    public static void main(String args[]) throws IOException {
-        Concepts concepts = new Concepts();
+        concepts.getMps().values().forEach(concept -> createFhirResourceForMp(concept));
+    }
 
-        readFile(new File(TERMINOLOGY_PATH + "sct2_Concept_Snapshot_AU1000168_20150531.txt"),
-            s -> concepts.handleConceptRow(s));
+    private static void createFhirResourceForMp(Concept concept) {
+        Medication medication = new Medication();
 
-        readFile(new File(TERMINOLOGY_PATH + "sct2_Relationship_Snapshot_AU1000168_20150531.txt"),
-            s -> concepts.handleRelationshipRow(s));
+        medication.setName(concept.getPreferredTerm());
+        medication.setCode(concept.toCodeableConceptDt());
+        medication.setIsBrand(false);
+        medication.setKind(MedicationKindEnum.PRODUCT);
+        Product product = new Product();
 
-        readFile(new File(TERMINOLOGY_PATH + "sct2_Description_Snapshot-en-AU_AU1000168_20150531.txt"),
-            s -> concepts.handleDescriptionRow(s));
+        concept.getRelationshipGroups()
+            .values()
+            .stream()
+            .flatMap(list -> list.stream())
+            .filter(r -> r.getType().equals(AttributeType.HAS_INTENDED_ACTIVE_INGREDIENT))
+            .forEach(r -> addIngredient(product, r));
 
-        readFile(new File(LANG_REFSET_PATH), s -> concepts.handleLanguageRefsetRow(s));
-
-        readFile(new File(REFSET_PATH + "der2_ccsRefset_StrengthSnapshot_AU1000168_20150531.txt"),
-            s -> concepts.handleDatatypeRefsetRow(s));
-
-        readFile(new File(REFSET_PATH + "der2_ccsRefset_UnitOfUseSizeSnapshot_AU1000168_20150531.txt"),
-            s -> concepts.handleDatatypeRefsetRow(s));
-
-        readFile(new File(REFSET_PATH + "der2_ccsRefset_UnitOfUseQuantitySnapshot_AU1000168_20150531.txt"),
-            s -> concepts.handleDatatypeRefsetRow(s));
-
-        readFile(new File(REFSET_PATH + "der2_cciRefset_SubpackQuantitySnapshot_AU1000168_20150531.txt"),
-            s -> concepts.handleDatatypeRefsetRow(s));
-
-        concepts.calculateTransitiveClosure();
+        IParser parser = FhirContext.forDstu2().newJsonParser();
 
     }
 
-    public static void readFile(File f, Consumer<String[]> c) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(f))) {
-            reader.lines().skip(1).forEach(s -> c.accept(s.split("\t")));
+    private static void addIngredient(Product product, Relationship r) {
+        ProductIngredient ingredient = product.addIngredient();
+        Substance substance = new Substance();
+        ingredient.setItem(new ResourceReferenceDt(substance));
+
+        BoundCodeableConceptDt<SubstanceTypeEnum> substanceCode = new BoundCodeableConceptDt<SubstanceTypeEnum>(
+            new IValueSetEnumBinder<SubstanceTypeEnum>() {
+
+                @Override
+                public SubstanceTypeEnum fromCodeString(String theCodeString) {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                @Override
+                public String toCodeString(SubstanceTypeEnum theEnum) {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                @Override
+                public String toSystemString(SubstanceTypeEnum theEnum) {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                @Override
+                public SubstanceTypeEnum fromCodeString(String theCodeString, String theSystemString) {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+            });
+        System.out.println("added code " + r.getDestination().getId());
+
+        if (r.getDatatypeProperty() != null) {
+            DataTypeProperty d = r.getDatatypeProperty();
+            Concept denominatorUnit = d.getUnit()
+                .getRelationshipGroups()
+                .values()
+                .stream()
+                .flatMap(list -> list.stream())
+                .filter(rel -> rel.getType().equals(AttributeType.HAS_DENOMINATOR_UNITS))
+                .findFirst()
+                .get()
+                .getDestination();
+            Concept numeratorUnit = d.getUnit()
+                .getRelationshipGroups()
+                .values()
+                .stream()
+                .flatMap(list -> list.stream())
+                .filter(rel -> rel.getType().equals(AttributeType.HAS_NUMERATOR_UNITS))
+                .findFirst()
+                .get()
+                .getDestination();
+
+            RatioDt value = new RatioDt();
+
+            QuantityDt denominator = new QuantityDt(1L);
+
+            denominator.setCode(Long.toString(denominatorUnit.getId()));
+            denominator.setUnits(denominatorUnit.getPreferredTerm());
+            denominator.setSystem(Concept.SNOMED_CT_SYSTEM_URI);
+            value.setDenominator(denominator);
+
+            QuantityDt numerator = new QuantityDt(Double.parseDouble(d.getValue()));
+            numerator.setCode(Long.toString(numeratorUnit.getId()));
+            numerator.setUnits(numeratorUnit.getPreferredTerm());
+            numerator.setSystem(Concept.SNOMED_CT_SYSTEM_URI);
+            value.setNumerator(numerator);
+
+            ingredient.setAmount(value);
         }
     }
+
 }
