@@ -1,9 +1,12 @@
 package amt2fhir;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ca.uhn.fhir.model.dstu2.composite.CodeableConceptDt;
 import ca.uhn.fhir.model.dstu2.composite.CodingDt;
@@ -69,7 +72,8 @@ public class Concept {
 
     public CodeableConceptDt toCodeableConceptDt() {
         if (codableConceptDt == null) {
-            codableConceptDt = new CodeableConceptDt(SNOMED_CT_SYSTEM_URI, Long.toString(getId()));
+            codableConceptDt = new CodeableConceptDt();
+            codableConceptDt.setCoding(Arrays.asList(toCodingDt()));
         }
         return codableConceptDt;
     }
@@ -80,5 +84,43 @@ public class Concept {
             codingDt.setDisplay(getPreferredTerm());
         }
         return codingDt;
+    }
+
+    public Concept getSingleDestination(AttributeType relationshipType) {
+        Relationship relationship = getRelationshipGroups().values()
+            .stream()
+            .flatMap(list -> list.stream())
+            .filter(rel -> rel.getType().equals(relationshipType))
+            .findFirst()
+            .orElse(null);
+        return relationship == null ? null : relationship.getDestination();
+    }
+
+    public Collection<Concept> getMultipleDestinations(AttributeType relationshipType) {
+        return getRelationshipGroups().values()
+            .stream()
+            .flatMap(list -> list.stream())
+            .filter(rel -> rel.getType().equals(relationshipType))
+            .map(r -> r.getDestination())
+            .collect(Collectors.toSet());
+    }
+
+    public Collection<Relationship> getRelationships(AttributeType type) {
+        return getRelationshipGroups().values()
+            .stream()
+            .flatMap(list -> list.stream())
+            .filter(r -> r.getType().equals(type))
+            .collect(Collectors.toSet());
+    }
+
+    public Collection<Collection<Relationship>> getRelationshipGroupsContaining(AttributeType type) {
+        return getRelationshipGroups().values()
+            .stream()
+            .filter(l -> l.stream().anyMatch(r -> r.getType().equals(type)))
+            .collect(Collectors.toSet());
+    }
+
+    public boolean hasParent(AmtConcept amtConcept) {
+        return parents.stream().anyMatch(p -> amtConcept.getId() == p.getId());
     }
 }

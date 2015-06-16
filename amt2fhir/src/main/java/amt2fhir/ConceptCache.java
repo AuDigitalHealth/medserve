@@ -159,14 +159,14 @@ public class ConceptCache {
     }
 
     private void handleDescriptionRow(String[] row) {
-        String conceptId = row[4];
+        Long conceptId = Long.parseLong(row[4]);
         if (isActive(row) && isAmtModule(row) && conceptCache.containsKey(conceptId)) {
             String descriptionId = row[0];
             String term = row[7];
             Concept concept = conceptCache.get(conceptId);
             if (row[6].equals(FSN)) {
                 concept.setFullSpecifiedName(term);
-            } else if (preferredDescriptionIdCache.contains(descriptionId)) {
+            } else if (preferredDescriptionIdCache.contains(Long.parseLong(descriptionId))) {
                 concept.setPreferredTerm(term);
             }
         }
@@ -181,7 +181,7 @@ public class ConceptCache {
     private void handleDatatypeRefsetRow(String[] row) {
         if (isActive(row) && isAmtModule(row)) {
             Relationship relationship = relationshipCache.get(Long.parseLong(row[5]));
-            long unitId = Long.parseLong(row[7]);
+            long unitId = Long.parseLong(row[6]);
             relationship.setDatatypeProperty(new DataTypeProperty(row[8], conceptCache.get(unitId),
                 AttributeType.fromIdString(row[4])));
         }
