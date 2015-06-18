@@ -13,7 +13,7 @@ import javax.ws.rs.QueryParam;
 import ca.uhn.fhir.model.dstu2.resource.Medication;
 
 @Path("/Medication")
-public class Server {
+public class MedicationRestService {
 
 	@Inject
 	MedicationStore store;
@@ -22,25 +22,21 @@ public class Server {
 	@Path("/getAll")
 	@Produces({ "application/json" })
 	public List<Medication> getAll() {
-		store.add(new Medication());
-		store.search();
 		return Arrays.asList();
 	}
 
 	@GET
 	@Path("/_search")
 	@Produces({ "application/json" })
-	public List<Medication> search(@QueryParam("_id") String id) {
-		store.search();
-		Medication m = new Medication();
-		return Arrays.asList(m);
+	public List<String> search(@QueryParam("_id") String id) {
+	    return store.searchMedicationById(id);
 	}
 
 	@PUT
 	@Path("/")
 	@Produces({ "application/json" })
-	public void create(Medication m) {
-		// consume m
+	public void create(String m) {
+		store.addMedication(m);
 	}
 
 }
