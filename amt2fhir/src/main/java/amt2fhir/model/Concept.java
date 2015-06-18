@@ -1,13 +1,14 @@
-package amt2fhir;
+package amt2fhir.model;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import amt2fhir.enumeration.AmtConcept;
+import amt2fhir.enumeration.AttributeType;
 import ca.uhn.fhir.model.dstu2.composite.CodeableConceptDt;
 import ca.uhn.fhir.model.dstu2.composite.CodingDt;
 
@@ -18,7 +19,7 @@ public class Concept {
     private String fullSpecifiedName;
     private String preferredTerm;
     private Map<Long, Set<Relationship>> relationshipGroups = new HashMap<>();
-    private Set<Concept> parents = new HashSet<>();
+    private Map<Long, Concept> parents = new HashMap<>();
     private CodeableConceptDt codableConceptDt;
     private CodingDt codingDt;
 
@@ -27,7 +28,7 @@ public class Concept {
     }
 
     public void addParent(Concept concept) {
-        parents.add(concept);
+        parents.put(concept.getId(), concept);
     }
 
     public long getId() {
@@ -60,14 +61,6 @@ public class Concept {
 
     public void setRelationshipGroups(Map<Long, Set<Relationship>> relationshipGroups) {
         this.relationshipGroups = relationshipGroups;
-    }
-
-    public Set<Concept> getParents() {
-        return parents;
-    }
-
-    public void setParents(Set<Concept> parents) {
-        this.parents = parents;
     }
 
     public CodeableConceptDt toCodeableConceptDt() {
@@ -121,6 +114,20 @@ public class Concept {
     }
 
     public boolean hasParent(AmtConcept amtConcept) {
-        return parents.stream().anyMatch(p -> amtConcept.getId() == p.getId());
+        return parents.containsKey(amtConcept.getId());
     }
+
+	public Map<Long, Concept> getParents() {
+		return parents;
+	}
+
+	public String toReference() {
+		return getId() + "|" + getPreferredTerm() + "|";
+	}
+
+	public boolean hasSameDestinations(Concept source, AttributeType relType) {
+		Collection<Concept> setA = getMultipleDestinations(relType);
+		Collection<Concept> setB = source.getMultipleDestinations(relType);
+		return setA.containsAll(setB) && setB.containsAll(setA);
+	}
 }

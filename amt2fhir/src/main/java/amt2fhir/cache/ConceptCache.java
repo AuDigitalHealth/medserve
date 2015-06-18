@@ -1,18 +1,27 @@
-package amt2fhir;
+package amt2fhir.cache;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.jgrapht.alg.TransitiveClosure;
 import org.jgrapht.graph.SimpleDirectedGraph;
+
+import amt2fhir.enumeration.AmtConcept;
+import amt2fhir.enumeration.AttributeType;
+import amt2fhir.model.Concept;
+import amt2fhir.model.DataTypeProperty;
+import amt2fhir.model.Relationship;
+import amt2fhir.util.LoggingTimer;
 
 public class ConceptCache {
     private static final String PREFERRED = "900000000000548007";
@@ -37,6 +46,7 @@ public class ConceptCache {
     private Map<Long, Concept> tpuus = new HashMap<>();
     private Map<Long, Concept> tpps = new HashMap<>();
     private Map<Long, Concept> ctpps = new HashMap<>();
+    private Map<Long, Concept> substances = new HashMap<>();
 
     public ConceptCache(FileSystem fileSystem) throws IOException {
 
@@ -58,41 +68,54 @@ public class ConceptCache {
         graph.incomingEdgesOf(AmtConcept.CTPP.getId())
             .stream()
             .map(e -> e.getSource())
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> ctpps.put(id, conceptCache.get(id)));
 
         graph.incomingEdgesOf(AmtConcept.TPP.getId())
             .stream()
             .map(e -> e.getSource())
             .filter(id -> !ctpps.keySet().contains(id))
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> tpps.put(id, conceptCache.get(id)));
+        logger.info("calculated TPP list");
 
         graph.incomingEdgesOf(AmtConcept.MPP.getId())
             .stream()
             .map(e -> e.getSource())
             .filter(id -> !tpps.keySet().contains(id))
             .filter(id -> !ctpps.keySet().contains(id))
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> mpps.put(id, conceptCache.get(id)));
-
+        
         graph.incomingEdgesOf(AmtConcept.TPUU.getId())
             .stream()
             .map(e -> e.getSource())
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> tpuus.put(id, conceptCache.get(id)));
-
+        
         graph.incomingEdgesOf(AmtConcept.MPUU.getId())
             .stream()
             .filter(id -> !tpuus.keySet().contains(id))
             .map(e -> e.getSource())
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> mpuus.put(id, conceptCache.get(id)));
-
+        
         graph.incomingEdgesOf(AmtConcept.MP.getId())
             .stream()
             .map(e -> e.getSource())
             .filter(id -> !tpuus.keySet().contains(id))
             .filter(id -> !mpuus.keySet().contains(id))
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> mps.put(id, conceptCache.get(id)));
+        
+        graph.incomingEdgesOf(AmtConcept.SUBSTANCE.getId())
+            .stream()
+            .map(e -> e.getSource())
+            .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
+            .forEach(id -> substances.put(id, conceptCache.get(id)));
 
         logger.info("Loaded " + ctpps.size() + " CTPPs " + tpps.size() + " TPPs " + mpps.size() + " MPPs "
-            + tpuus.size() + " TPUUs " + mpuus.size() + " MPUUs " + mps.size() + " MPs");
+            + tpuus.size() + " TPUUs " + mpuus.size() + " MPUUs " + mps.size() + " MPs " + substances.size() + " Substances");
     }
 
     public Map<Long, Concept> getMps() {
@@ -120,7 +143,8 @@ public class ConceptCache {
     }
 
     private void readFile(Path path, Consumer<String[]> consumer) throws IOException {
-        Files.lines(path).skip(1).forEach(s -> consumer.accept(s.split("\t")));
+		Files.lines(path).skip(1).forEach(s -> consumer.accept(s.split("\t")));
+		logger.info("Processed " + path);
     }
 
     private void handleConceptRow(String[] row) {
@@ -200,5 +224,25 @@ public class ConceptCache {
     private boolean isAmtModule(String[] row) {
         return row[3].equals(AMT_MODULE_ID);
     }
+
+	public Collection<Long> getDescendantOf(Long... id) {
+		Set<Long> result = graph.incomingEdgesOf(id[0]).stream()
+				.map(e -> e.getSource()).collect(Collectors.toSet());
+		
+		for (int i = 1; i < id.length; i++) {
+			result.retainAll(graph.incomingEdgesOf(id[i]).stream()
+				.map(e -> e.getSource()).collect(Collectors.toSet()));
+		}
+		
+		return result;
+	}
+
+	public Concept getConcept(Long id) {
+		return conceptCache.get(id);
+	}
+
+	public Map<Long, Concept> getSubstances() {
+		return substances;
+	}
 
 }

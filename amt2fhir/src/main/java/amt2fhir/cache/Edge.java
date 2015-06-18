@@ -1,4 +1,4 @@
-package amt2fhir;
+package amt2fhir.cache;
 
 import org.jgrapht.graph.DefaultEdge;
 

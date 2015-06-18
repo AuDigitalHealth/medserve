@@ -1,4 +1,6 @@
-package amt2fhir;
+package amt2fhir.model;
+
+import amt2fhir.enumeration.AttributeType;
 
 public class DataTypeProperty {
     private String value;
