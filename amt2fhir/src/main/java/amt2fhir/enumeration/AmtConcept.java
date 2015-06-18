@@ -1,4 +1,4 @@
-package amt2fhir;
+package amt2fhir.enumeration;
 
 import java.util.HashMap;
 
@@ -10,7 +10,8 @@ public enum AmtConcept {
     TP(30560011000036108L),
     TPUU(30425011000036101L),
     TPP(30404011000036106L),
-    CTPP(30537011000036101L);
+    CTPP(30537011000036101L),
+    SUBSTANCE(30344011000036106L);
     // @formatter:on
 
     private static HashMap<Long, AmtConcept> instanceMap = new HashMap<>();

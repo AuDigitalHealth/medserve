@@ -1,4 +1,4 @@
-package amt2fhir;
+package amt2fhir.util;
 
 import java.util.logging.Logger;
 

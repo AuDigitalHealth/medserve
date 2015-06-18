@@ -1,4 +1,4 @@
-package amt2fhir;
+package amt2fhir.cache;
 
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -19,7 +19,6 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
         if (attr.isRegularFile()) {
             String fileName = file.getFileName().toString();
             if (fileName.startsWith("sct2_Concept_Snapshot_AU1000168")) {
-                System.out.println("found concepts");
                 conceptFile = file;
             } else if (fileName.startsWith("sct2_Relationship_Snapshot_AU1000168")) {
                 relationshipFile = file;
