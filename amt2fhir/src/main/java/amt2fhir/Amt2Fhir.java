@@ -38,6 +38,7 @@ import ca.uhn.fhir.model.dstu2.resource.Medication.Product;
 import ca.uhn.fhir.model.dstu2.resource.Medication.ProductIngredient;
 import ca.uhn.fhir.model.dstu2.resource.Substance;
 import ca.uhn.fhir.model.dstu2.valueset.MedicationKindEnum;
+import ca.uhn.fhir.model.dstu2.valueset.NarrativeStatusEnum;
 import ca.uhn.fhir.model.dstu2.valueset.SubstanceTypeEnum;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
@@ -106,6 +107,8 @@ public class Amt2Fhir {
                 Files.write(FIleUtils.getFailPath(basePath, type).resolve(getFileName(resource)),
                     parser.encodeResourceToString(resource).getBytes(), StandardOpenOption.CREATE_NEW,
                     StandardOpenOption.WRITE);
+                Files.write(FIleUtils.getFailPath(basePath, type).resolve(getFileName(resource)),
+                    result.toString().getBytes(), StandardOpenOption.APPEND, StandardOpenOption.WRITE);
             }
         } catch (DataFormatException | IOException e) {
             logger.log(Level.SEVERE, "Failed writing out resource " + parser.encodeResourceToString(resource), e);
@@ -163,7 +166,8 @@ public class Amt2Fhir {
 			BaseResource resource) {
 		resource.setId(Long.toString(concept.getId()));
 		NarrativeDt narrative = new NarrativeDt();
-		narrative.setDiv("<p>" + StringEscapeUtils.escapeHtml3(concept.getPreferredTerm()) + "</p>");
+		narrative.setStatus(NarrativeStatusEnum.GENERATED);
+		narrative.setDiv("<div><p>" + StringEscapeUtils.escapeHtml3(concept.getPreferredTerm()) + "</p></div>");
 		resource.setText(narrative);
 	}
 
