@@ -23,9 +23,6 @@ import ca.uhn.fhir.model.dstu2.resource.Medication;
 import ca.uhn.fhir.model.dstu2.resource.Substance;
 import ca.uhn.fhir.parser.IParser;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 @ApplicationScoped
 public class MedicationStore {
 
@@ -45,6 +42,7 @@ public class MedicationStore {
             container = initializer.initialize();
 
             server = new EmbeddedSolrServer(container, "collection1");
+            server.deleteByQuery("*:*");
             addMedication(FileUtils.readFileToString(new File(
                     "/opt/hl7/medications.store/MEDICATION.json")));
 
@@ -101,6 +99,7 @@ public class MedicationStore {
             Medication medication = parser.parseResource(Medication.class, m);
             SolrInputDocument document = new SolrInputDocument();
             document.addField("id", medication.getId().getIdPartAsLong().toString());
+            document.addField("name", medication.getName());
             document.addField("subject", "medication");
             document.addField("author", m);
             server.add(document);
@@ -116,6 +115,7 @@ public class MedicationStore {
             Substance substance = parser.parseResource(Substance.class, s);
             SolrInputDocument document = new SolrInputDocument();
             document.addField("id", substance.getId().getIdPartAsLong().toString());
+            document.addField("name", substance.getText());
             document.addField("subject", "substance");
             document.addField("author", s);
             server.add(document);
@@ -123,6 +123,26 @@ public class MedicationStore {
             server.commit();
         } catch (Exception e) {
             throw new RuntimeException("MedicationStore::addSubstance", e);
+        }
+    }
+
+    public List<String> searchMedicationByName(String name) {
+        try {
+            SolrQuery query = new SolrQuery();
+            query.setQuery("name:*" + name + "*");
+            QueryResponse rsp = server.query(query);
+            SolrDocumentList docs = rsp.getResults();
+            List<String> list = new ArrayList<>();
+            docs.forEach(new Consumer<SolrDocument>() {
+                @Override
+                public void accept(SolrDocument t) {
+                    list.add(String.class.cast(t.getFieldValue("author")));
+                }
+            });
+            return list;
+        } catch (Exception e) {
+            throw new RuntimeException("MedicationStore::searchMedicationById",
+                    e);
         }
     }
 
