@@ -3,6 +3,7 @@ package org.tiddy.fhir.server;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -13,6 +14,10 @@ import ca.uhn.fhir.model.dstu2.resource.Medication;
 
 @Path("/Medication")
 public class Server {
+
+	@Inject
+	MedicationStore store;
+
 	@GET
 	@Path("/_search")
 	@Produces({ "application/json" })
@@ -20,12 +25,12 @@ public class Server {
 		Medication m = new Medication();
 		return Arrays.asList(m);
 	}
-	
+
 	@PUT
 	@Path("/")
 	@Produces({ "application/json" })
 	public void create(Medication m) {
 		// consume m
 	}
-	
+
 }
