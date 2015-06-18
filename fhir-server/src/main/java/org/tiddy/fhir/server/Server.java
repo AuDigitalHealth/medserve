@@ -19,9 +19,19 @@ public class Server {
 	MedicationStore store;
 
 	@GET
+	@Path("/getAll")
+	@Produces({ "application/json" })
+	public List<Medication> getAll() {
+		store.add(new Medication());
+		store.search();
+		return Arrays.asList();
+	}
+
+	@GET
 	@Path("/_search")
 	@Produces({ "application/json" })
 	public List<Medication> search(@QueryParam("_id") String id) {
+		store.search();
 		Medication m = new Medication();
 		return Arrays.asList(m);
 	}
