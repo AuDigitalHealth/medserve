@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import amt2fhir.cache.ConceptCache;
@@ -25,6 +26,7 @@ import amt2fhir.util.FIleUtils;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.ExtensionDt;
 import ca.uhn.fhir.model.dstu2.composite.BoundCodeableConceptDt;
+import ca.uhn.fhir.model.dstu2.composite.NarrativeDt;
 import ca.uhn.fhir.model.dstu2.composite.QuantityDt;
 import ca.uhn.fhir.model.dstu2.composite.RatioDt;
 import ca.uhn.fhir.model.dstu2.composite.ResourceReferenceDt;
@@ -135,7 +137,7 @@ public class Amt2Fhir {
 
 	private static Substance createSubstanceResource(Concept concept) {
 		Substance substance = new Substance();
-		substance.setId(Long.toString(concept.getId()));
+		setStandardResourceElements(concept, substance);
 		
 		BoundCodeableConceptDt<SubstanceTypeEnum> type = new BoundCodeableConceptDt<SubstanceTypeEnum>(
 				SubstanceTypeEnum.VALUESET_BINDER);
@@ -149,12 +151,20 @@ public class Amt2Fhir {
 	
 	private static Medication createBaseMedicationResource(Concept concept) {
 		Medication medication = new Medication();
-		medication.setId(Long.toString(concept.getId()));
+		setStandardResourceElements(concept, medication);
 	
 	    medication.setName(concept.getPreferredTerm());
 	    medication.setCode(concept.toCodeableConceptDt());
 	    medication.setIsBrand(concept.hasParent(AmtConcept.TPUU));
 		return medication;
+	}
+
+	private static void setStandardResourceElements(Concept concept,
+			BaseResource resource) {
+		resource.setId(Long.toString(concept.getId()));
+		NarrativeDt narrative = new NarrativeDt();
+		narrative.setDiv("<p>" + StringEscapeUtils.escapeHtml3(concept.getPreferredTerm()) + "</p>");
+		resource.setText(narrative);
 	}
 
 	private static Medication createPackageResource(Concept concept) {
