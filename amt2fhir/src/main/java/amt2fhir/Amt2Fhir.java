@@ -10,9 +10,17 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -22,7 +30,7 @@ import amt2fhir.enumeration.AttributeType;
 import amt2fhir.model.Concept;
 import amt2fhir.model.DataTypeProperty;
 import amt2fhir.model.Relationship;
-import amt2fhir.util.FIleUtils;
+import amt2fhir.util.FileUtils;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.ExtensionDt;
 import ca.uhn.fhir.model.dstu2.composite.BoundCodeableConceptDt;
@@ -42,72 +50,153 @@ import ca.uhn.fhir.model.dstu2.valueset.NarrativeStatusEnum;
 import ca.uhn.fhir.model.dstu2.valueset.SubstanceTypeEnum;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.MethodOutcome;
+import ca.uhn.fhir.rest.client.IGenericClient;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
 
 public class Amt2Fhir {
 
-    private static final Logger logger = Logger.getLogger(ConceptCache.class.getCanonicalName());
+    private static final String INPUT_FILE_OPTION = "i";
 
-    private static IParser parser;
-    private static FhirValidator validator;
+	private static final String URL_OPTION = "url";
 
-	private static ConceptCache conceptCache;
+	private static final String OUTPUT_FILE_OPTION = "o";
+
+	private static final Logger logger = Logger.getLogger(ConceptCache.class.getCanonicalName());
+
+    private IParser parser;
+    private FhirValidator validator;
+
+	private ConceptCache conceptCache;
+
+	private IGenericClient client;
 
     public static void main(String args[]) throws IOException, URISyntaxException {
-		writeResourcesToFiles(FileSystems.getDefault().getPath(args[0]),
-				FileSystems.getDefault().getPath(args[1]));
-        
+    	Options options = new Options();
+		
+		options.addOption(Option.builder(INPUT_FILE_OPTION).longOpt("inputFile")
+				.argName("AMT_ZIP_FILE_PATH").hasArg()
+				.desc("Input AMT release ZIP file").required(true).build());
+		options.addOption(Option.builder(URL_OPTION)
+				.argName("FHIR_SERVER_BASE_URL").hasArg()
+				.desc("FHIR server URL to post Medication Resources to "
+						+ "- e.g. http://fhir-dev.healthintersections.com.au/open/").build());
+		options.addOption(Option.builder(OUTPUT_FILE_OPTION).longOpt("outputDirectory")
+				.argName("OUTPUT_DIR").hasArg()
+				.desc("Output directory to write out Medication Resources as files").build());
+
+    	CommandLineParser parser = new DefaultParser();
+		try {
+			CommandLine line = parser.parse(options, args);
+			
+			Amt2Fhir amt2Fhir = new Amt2Fhir(FileSystems.getDefault().getPath(line.getOptionValue(INPUT_FILE_OPTION)));
+			
+			if (!line.hasOption(OUTPUT_FILE_OPTION) && !line.hasOption(URL_OPTION)) {
+				throw new ParseException("At least one output mode -o or -url must be specified");
+			}
+			
+			if (line.hasOption(URL_OPTION)) {
+				amt2Fhir.postToFhirServer(line.getOptionValue(URL_OPTION));
+			}
+			
+			if (line.hasOption(OUTPUT_FILE_OPTION)) {
+				amt2Fhir.writeResourcesToFiles(FileSystems.getDefault().getPath(line.getOptionValue(OUTPUT_FILE_OPTION)));
+			}
+		} catch (ParseException exp) {
+			System.err.println("Parsing failed.  Reason: " + exp.getMessage());
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("Amt2Fhir", options);
+		}
+    }
+    
+    public Amt2Fhir(Path amtReleaseZipPath) throws IOException {
+		conceptCache = new ConceptCache(FileSystems.newFileSystem(
+	            URI.create("jar:file:" + amtReleaseZipPath.toAbsolutePath().toString()),
+	            new HashMap<>()));
+    }
+    
+    public void postToFhirServer(String url) {
+		client = FhirContext.forDstu2().newRestfulGenericClient(url);
+		
+        process(getCreateResourceConsumer(url));
     }
 
-	private static void writeResourcesToFiles(Path amtReleaseZipPath, Path outputPath) throws IOException {
-		conceptCache = new ConceptCache(FileSystems.newFileSystem(
-            URI.create("jar:file:" + amtReleaseZipPath.toAbsolutePath().toString()),
-            new HashMap<>()));
-
-        FIleUtils.initialiseOutputDirectories(outputPath, "mp");
-        FIleUtils.initialiseOutputDirectories(outputPath, "mpuu");
-        FIleUtils.initialiseOutputDirectories(outputPath, "mpp");
-        FIleUtils.initialiseOutputDirectories(outputPath, "tpuu");
-        FIleUtils.initialiseOutputDirectories(outputPath, "tpp");
-        FIleUtils.initialiseOutputDirectories(outputPath, "ctpp");
-        FIleUtils.initialiseOutputDirectories(outputPath, "substance");
-
-        logger.info("initialised paths");
-        
+	public void writeResourcesToFiles(Path outputPath) throws IOException {
         parser = FhirContext.forDstu2().newJsonParser();
         parser.setPrettyPrint(true);
         validator = FhirContext.forDstu2().newValidator();
+        
+        FileUtils.initialiseOutputDirectories(outputPath, "mp");
+        FileUtils.initialiseOutputDirectories(outputPath, "mpuu");
+        FileUtils.initialiseOutputDirectories(outputPath, "mpp");
+        FileUtils.initialiseOutputDirectories(outputPath, "tpuu");
+        FileUtils.initialiseOutputDirectories(outputPath, "tpp");
+        FileUtils.initialiseOutputDirectories(outputPath, "ctpp");
+        FileUtils.initialiseOutputDirectories(outputPath, "substance");
 
-        conceptCache.getMps().values().forEach(concept -> writeResource(createProductResource(concept), outputPath, "mp"));
-        logger.info("written MPs");
-        conceptCache.getMpuus().values().forEach(concept -> writeResource(createProductResource(concept), outputPath, "mpuu"));
-        logger.info("written MPUUs");
-        conceptCache.getTpuus().values().forEach(concept -> writeResource(createProductResource(concept), outputPath, "tpuu"));
-        logger.info("written TPUUs");
-        conceptCache.getMpps().values().forEach(concept -> writeResource(createPackageResource(concept), outputPath, "mpp"));
-        logger.info("written MPPs");
-        conceptCache.getTpps().values().forEach(concept -> writeResource(createPackageResource(concept), outputPath, "tpp"));
-        logger.info("written TPPs");
-        conceptCache.getCtpps().values().forEach(concept -> writeResource(createPackageResource(concept), outputPath, "ctpp"));
-        logger.info("written CTPPs");
-        conceptCache.getSubstances().values().forEach(concept -> writeResource(createSubstanceResource(concept), outputPath, "substance"));
-        logger.info("written Substances");
+        logger.info("initialised paths");
+
+        process(getWriteResourceConsumer(outputPath));
+	}
+	
+	private BiConsumer<BaseResource, String> getWriteResourceConsumer(Path outputPath) {
+		return (resource, type) -> writeResource(resource, outputPath, type);
+	}
+	
+	private BiConsumer<BaseResource, String> getCreateResourceConsumer(String url) {
+		return (resource, type) -> createResourceOnServer(resource, url, type);
 	}
 
-	private static void writeResource(BaseResource resource, Path basePath, String type) {
+	private void createResourceOnServer(BaseResource resource, String url, String string) {
+		MethodOutcome outcome = client.update(resource.getId(), resource);
+		// TODO - do some validation of the outcome
+	}
+
+	private void process(BiConsumer<BaseResource, String> consumer) {
+		conceptCache.getMps().values().stream()
+				.map(concept -> createProductResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "mp"));
+		logger.info("written MPs");
+		conceptCache.getMpuus().values().stream()
+				.map(concept -> createProductResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "mpuu"));
+		logger.info("written MPUUs");
+		conceptCache.getTpuus().values().stream()
+				.map(concept -> createProductResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "tpuu"));
+		logger.info("written TPUUs");
+		conceptCache.getMpps().values().stream()
+				.map(concept -> createPackageResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "mpp"));
+		logger.info("written MPPs");
+		conceptCache.getTpps().values().stream()
+				.map(concept -> createPackageResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "tpp"));
+		logger.info("written TPPs");
+		conceptCache.getCtpps().values().stream()
+				.map(concept -> createPackageResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "ctpp"));
+		logger.info("written CTPPs");
+		conceptCache.getSubstances().values().stream()
+				.map(concept -> createSubstanceResource(concept)).limit(1)
+				.forEach(resource -> consumer.accept(resource, "substance"));
+		logger.info("written Substances");
+	}
+
+	private void writeResource(BaseResource resource, Path basePath, String type) {
         ValidationResult result = validator.validateWithResult(resource);
 
         try {
             if (result.isSuccessful()) {
-                Files.write(FIleUtils.getSuccessPath(basePath, type).resolve(getFileName(resource)),
+                Files.write(FileUtils.getSuccessPath(basePath, type).resolve(getFileName(resource)),
                     parser.encodeResourceToString(resource).getBytes(), StandardOpenOption.CREATE_NEW,
                     StandardOpenOption.WRITE);
             } else {
-                Files.write(FIleUtils.getFailPath(basePath, type).resolve(getFileName(resource)),
+                Files.write(FileUtils.getFailPath(basePath, type).resolve(getFileName(resource)),
                     parser.encodeResourceToString(resource).getBytes(), StandardOpenOption.CREATE_NEW,
                     StandardOpenOption.WRITE);
-                Files.write(FIleUtils.getFailPath(basePath, type).resolve(getFileName(resource)),
+                Files.write(FileUtils.getFailPath(basePath, type).resolve(getFileName(resource)),
                     result.toString().getBytes(), StandardOpenOption.APPEND, StandardOpenOption.WRITE);
             }
         } catch (DataFormatException | IOException e) {
@@ -115,7 +204,7 @@ public class Amt2Fhir {
         }
     }
 
-    private static String getFileName(BaseResource resource) {
+    private String getFileName(BaseResource resource) {
     	String name;
     	String code;
     	if (resource instanceof Medication) {
@@ -138,7 +227,7 @@ public class Amt2Fhir {
         return name;
     }
 
-	private static Substance createSubstanceResource(Concept concept) {
+	private Substance createSubstanceResource(Concept concept) {
 		Substance substance = new Substance();
 		setStandardResourceElements(concept, substance);
 		
@@ -152,7 +241,7 @@ public class Amt2Fhir {
 		return substance;
 	}
 	
-	private static Medication createBaseMedicationResource(Concept concept) {
+	private Medication createBaseMedicationResource(Concept concept) {
 		Medication medication = new Medication();
 		setStandardResourceElements(concept, medication);
 	
@@ -162,7 +251,7 @@ public class Amt2Fhir {
 		return medication;
 	}
 
-	private static void setStandardResourceElements(Concept concept,
+	private void setStandardResourceElements(Concept concept,
 			BaseResource resource) {
 		resource.setId(Long.toString(concept.getId()));
 		NarrativeDt narrative = new NarrativeDt();
@@ -171,7 +260,7 @@ public class Amt2Fhir {
 		resource.setText(narrative);
 	}
 
-	private static Medication createPackageResource(Concept concept) {
+	private Medication createPackageResource(Concept concept) {
         Medication medication = createBaseMedicationResource(concept);
         medication.setKind(MedicationKindEnum.PACKAGE);
         ca.uhn.fhir.model.dstu2.resource.Medication.Package pkg = new ca.uhn.fhir.model.dstu2.resource.Medication.Package();
@@ -193,7 +282,7 @@ public class Amt2Fhir {
         return medication;
 	}
 	
-    private static Medication createProductResource(Concept concept) {
+    private Medication createProductResource(Concept concept) {
 	    Medication medication = createBaseMedicationResource(concept);
 	    medication.setKind(MedicationKindEnum.PRODUCT);
 	    Product product = new Product();
@@ -209,7 +298,7 @@ public class Amt2Fhir {
 	    return medication;
 	}
 
-	private static void addProductReference(Package pkg, Relationship relationship) {
+	private void addProductReference(Package pkg, Relationship relationship) {
     	PackageContent content = pkg.addContent();
 
         Concept destination;
@@ -256,7 +345,7 @@ public class Amt2Fhir {
         content.setAmount(quantity);
 	}
 
-	private static void addIngredient(Product product, Collection<Relationship> relationships) {
+	private void addIngredient(Product product, Collection<Relationship> relationships) {
         Relationship iai = relationships.stream()
             .filter(r -> r.getType().equals(AttributeType.HAS_INTENDED_ACTIVE_INGREDIENT))
             .findFirst()
@@ -300,7 +389,7 @@ public class Amt2Fhir {
         }
     }
 
-	private static ResourceReferenceDt toReference(Concept concept, String resourceType) {
+	private ResourceReferenceDt toReference(Concept concept, String resourceType) {
 		ResourceReferenceDt substanceReference = 
 				new ResourceReferenceDt(resourceType + "/" + concept.getId());
         substanceReference.setDisplay(concept.getPreferredTerm());

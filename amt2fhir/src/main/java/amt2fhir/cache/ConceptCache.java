@@ -143,7 +143,7 @@ public class ConceptCache {
     }
 
     private void readFile(Path path, Consumer<String[]> consumer) throws IOException {
-		Files.lines(path).skip(1).forEach(s -> consumer.accept(s.split("\t")));
+		Files.lines(path).skip(1).map(s -> s.split("\t")).forEach(consumer);
 		logger.info("Processed " + path);
     }
 

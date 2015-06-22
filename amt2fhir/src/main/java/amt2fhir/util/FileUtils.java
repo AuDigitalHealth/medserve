@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class FIleUtils {
+public class FileUtils {
 
 	public static void initialiseOutputDirectories(Path baseDir, String type) throws IOException {
 	    recursiveDelete(getSuccessPath(baseDir, type));
