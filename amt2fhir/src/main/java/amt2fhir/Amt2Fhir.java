@@ -155,31 +155,31 @@ public class Amt2Fhir {
 
 	private void process(BiConsumer<BaseResource, String> consumer) {
 		conceptCache.getMps().values().stream()
-				.map(concept -> createProductResource(concept)).limit(1)
+				.map(concept -> createProductResource(concept))
 				.forEach(resource -> consumer.accept(resource, "mp"));
 		logger.info("written MPs");
 		conceptCache.getMpuus().values().stream()
-				.map(concept -> createProductResource(concept)).limit(1)
+				.map(concept -> createProductResource(concept))
 				.forEach(resource -> consumer.accept(resource, "mpuu"));
 		logger.info("written MPUUs");
 		conceptCache.getTpuus().values().stream()
-				.map(concept -> createProductResource(concept)).limit(1)
+				.map(concept -> createProductResource(concept))
 				.forEach(resource -> consumer.accept(resource, "tpuu"));
 		logger.info("written TPUUs");
 		conceptCache.getMpps().values().stream()
-				.map(concept -> createPackageResource(concept)).limit(1)
+				.map(concept -> createPackageResource(concept))
 				.forEach(resource -> consumer.accept(resource, "mpp"));
 		logger.info("written MPPs");
 		conceptCache.getTpps().values().stream()
-				.map(concept -> createPackageResource(concept)).limit(1)
+				.map(concept -> createPackageResource(concept))
 				.forEach(resource -> consumer.accept(resource, "tpp"));
 		logger.info("written TPPs");
 		conceptCache.getCtpps().values().stream()
-				.map(concept -> createPackageResource(concept)).limit(1)
+				.map(concept -> createPackageResource(concept))
 				.forEach(resource -> consumer.accept(resource, "ctpp"));
 		logger.info("written CTPPs");
 		conceptCache.getSubstances().values().stream()
-				.map(concept -> createSubstanceResource(concept)).limit(1)
+				.map(concept -> createSubstanceResource(concept))
 				.forEach(resource -> consumer.accept(resource, "substance"));
 		logger.info("written Substances");
 	}
