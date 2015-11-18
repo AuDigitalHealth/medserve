@@ -34,6 +34,7 @@ import amt2fhir.util.FileUtils;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.ExtensionDt;
 import ca.uhn.fhir.model.dstu2.composite.BoundCodeableConceptDt;
+import ca.uhn.fhir.model.dstu2.composite.CodingDt;
 import ca.uhn.fhir.model.dstu2.composite.NarrativeDt;
 import ca.uhn.fhir.model.dstu2.composite.QuantityDt;
 import ca.uhn.fhir.model.dstu2.composite.RatioDt;
@@ -220,11 +221,11 @@ public class Amt2Fhir {
 			code = resource.getId().toString();
 		}
 
-		if (name.length() > 255) {
-			return code + " - " + name.substring(0, 240 - code.length());
+        if (name.length() > 200) {
+            return name.substring(0, 200 - code.length()) + "_" + code;
 		}
     	
-        return name;
+        return name + "_" + code;
     }
 
 	private Substance createSubstanceResource(Concept concept) {
@@ -244,10 +245,18 @@ public class Amt2Fhir {
 	private Medication createBaseMedicationResource(Concept concept) {
 		Medication medication = new Medication();
 		setStandardResourceElements(concept, medication);
-	
+
 	    medication.setName(concept.getPreferredTerm());
 	    medication.setCode(concept.toCodeableConceptDt());
 	    medication.setIsBrand(concept.hasParent(AmtConcept.TPUU));
+
+        String artgId = conceptCache.getArtgId(concept.getId());
+        if (artgId != null) {
+            CodingDt codingDt = medication.getCode().addCoding();
+            codingDt.setSystem("https://www.tga.gov.au/australian-register-therapeutic-goods");
+            codingDt.setCode(artgId);
+        }
+
 		return medication;
 	}
 

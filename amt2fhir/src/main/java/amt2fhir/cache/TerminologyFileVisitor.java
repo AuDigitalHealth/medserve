@@ -9,7 +9,7 @@ import java.util.Set;
 
 class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
 
-    private Path conceptFile, relationshipFile, descriptionFile, languageRefsetFile;
+    private Path conceptFile, relationshipFile, descriptionFile, languageRefsetFile, artgIdRefsetFile;
     private Set<Path> datatypePropertyFiles = new HashSet<Path>();
 
     // Print information about
@@ -26,6 +26,8 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
                 descriptionFile = file;
             } else if (fileName.startsWith("der2_cRefset_LanguageSnapshot-en-AU_AU1000168")) {
                 languageRefsetFile = file;
+            } else if (fileName.startsWith("der2_iRefset_ARTGIdSnapshot_AU1000168")) {
+                artgIdRefsetFile = file;
             } else if (fileName.startsWith("der2_ccsRefset_StrengthSnapshot_AU1000168")
                 || fileName.startsWith("der2_ccsRefset_UnitOfUseSizeSnapshot_AU1000168")
                 || fileName.startsWith("der2_ccsRefset_UnitOfUseQuantitySnapshot_AU1000168")
@@ -54,6 +56,10 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
 
     public Set<Path> getDatatypePropertyFiles() {
         return datatypePropertyFiles;
+    }
+
+    public Path getArtgIdRefsetFile() {
+        return artgIdRefsetFile;
     }
 
 }

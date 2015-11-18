@@ -47,6 +47,7 @@ public class ConceptCache {
     private Map<Long, Concept> tpps = new HashMap<>();
     private Map<Long, Concept> ctpps = new HashMap<>();
     private Map<Long, Concept> substances = new HashMap<>();
+    private Map<Long, String> artgIdCache = new HashMap<>();
 
     public ConceptCache(FileSystem fileSystem) throws IOException {
 
@@ -58,6 +59,7 @@ public class ConceptCache {
         readFile(visitor.getRelationshipFile(), s -> handleRelationshipRow(s));
         readFile(visitor.getLanguageRefsetFile(), s -> handleLanguageRefsetRow(s));
         readFile(visitor.getDescriptionFile(), s -> handleDescriptionRow(s));
+        readFile(visitor.getArtgIdRefsetFile(), s -> handleArtgIdRefsetRow(s));
 
         for (Path file : visitor.getDatatypePropertyFiles()) {
             readFile(file, s -> handleDatatypeRefsetRow(s));
@@ -95,8 +97,8 @@ public class ConceptCache {
         
         graph.incomingEdgesOf(AmtConcept.MPUU.getId())
             .stream()
-            .filter(id -> !tpuus.keySet().contains(id))
             .map(e -> e.getSource())
+            .filter(id -> !tpuus.keySet().contains(id))
             .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> mpuus.put(id, conceptCache.get(id)));
         
@@ -211,6 +213,12 @@ public class ConceptCache {
         }
     }
 
+    private void handleArtgIdRefsetRow(String[] row) {
+        if (isActive(row) && isAmtModule(row)) {
+            artgIdCache.put(Long.parseLong(row[5]), row[6]);
+        }
+    }
+
     private void calculateTransitiveClosure() {
         try (LoggingTimer l = new LoggingTimer(logger, "calculate transitive closure")) {
             TransitiveClosure.INSTANCE.closeSimpleDirectedGraph(graph);
@@ -240,6 +248,10 @@ public class ConceptCache {
 	public Concept getConcept(Long id) {
 		return conceptCache.get(id);
 	}
+
+    public String getArtgId(Long id) {
+        return artgIdCache.get(id);
+    }
 
 	public Map<Long, Concept> getSubstances() {
 		return substances;

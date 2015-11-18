@@ -1,8 +1,9 @@
 package amt2fhir.model;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -66,7 +67,9 @@ public class Concept {
     public CodeableConceptDt toCodeableConceptDt() {
         if (codableConceptDt == null) {
             codableConceptDt = new CodeableConceptDt();
-            codableConceptDt.setCoding(Arrays.asList(toCodingDt()));
+            List<CodingDt> list = new ArrayList<>();
+            list.add(toCodingDt());
+            codableConceptDt.setCoding(list);
         }
         return codableConceptDt;
     }
