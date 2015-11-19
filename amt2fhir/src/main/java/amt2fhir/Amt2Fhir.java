@@ -10,9 +10,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -57,6 +59,8 @@ import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
 
 public class Amt2Fhir {
+
+    private static final String TPP_EXTENSION_URL = "http://github.com/dionmcm/amtOnFhir/tree/master/amt2fhir/fhir/extension/tpp/0.1.0";
 
     private static final String INPUT_FILE_OPTION = "i";
 
@@ -288,9 +292,28 @@ public class Amt2Fhir {
         concept.getRelationships(AttributeType.HAS_COMPONENT_PACK).forEach(r -> addProductReference(pkg, r));
         concept.getRelationships(AttributeType.HAS_SUBPACK).forEach(r -> addProductReference(pkg, r));
         
+        if (concept.hasParent(AmtConcept.CTPP)) {
+            List<Concept> tpps = concept.getParents()
+                .values()
+                .stream()
+                .filter(c -> c.getId() != AmtConcept.CTPP.getId())
+                .collect(Collectors.toList());
+            if (tpps.size() != 1) {
+                throw new RuntimeException(
+                    "Expect only one tpp for ctpp " + concept.getId() + " but found " + tpps.size());
+            }
+            addTppExtension(tpps.iterator().next(), medication);
+        }
+
         return medication;
 	}
 	
+    private void addTppExtension(Concept tpp, Medication medication) {
+        medication.addUndeclaredExtension(false,
+            TPP_EXTENSION_URL,
+            new CodingDt(Concept.SNOMED_CT_SYSTEM_URI, Long.toString(tpp.getId())));
+    }
+
     private Medication createProductResource(Concept concept) {
 	    Medication medication = createBaseMedicationResource(concept);
 	    medication.setKind(MedicationKindEnum.PRODUCT);
