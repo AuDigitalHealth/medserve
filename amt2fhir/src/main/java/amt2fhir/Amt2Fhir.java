@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -254,11 +255,13 @@ public class Amt2Fhir {
 	    medication.setCode(concept.toCodeableConceptDt());
 	    medication.setIsBrand(concept.hasParent(AmtConcept.TPUU));
 
-        String artgId = conceptCache.getArtgId(concept.getId());
-        if (artgId != null) {
-            CodingDt codingDt = medication.getCode().addCoding();
-            codingDt.setSystem("https://www.tga.gov.au/australian-register-therapeutic-goods");
-            codingDt.setCode(artgId);
+        Set<String> artgIds = conceptCache.getArtgId(concept.getId());
+        if (artgIds != null) {
+            for (String id : artgIds) {
+                CodingDt codingDt = medication.getCode().addCoding();
+                codingDt.setSystem("https://www.tga.gov.au/australian-register-therapeutic-goods");
+                codingDt.setCode(id);
+            }
         }
 
 		return medication;

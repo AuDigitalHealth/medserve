@@ -47,7 +47,7 @@ public class ConceptCache {
     private Map<Long, Concept> tpps = new HashMap<>();
     private Map<Long, Concept> ctpps = new HashMap<>();
     private Map<Long, Concept> substances = new HashMap<>();
-    private Map<Long, String> artgIdCache = new HashMap<>();
+    private Map<Long, Set<String>> artgIdCache = new HashMap<>();
 
     public ConceptCache(FileSystem fileSystem) throws IOException {
 
@@ -215,7 +215,13 @@ public class ConceptCache {
 
     private void handleArtgIdRefsetRow(String[] row) {
         if (isActive(row) && isAmtModule(row)) {
-            artgIdCache.put(Long.parseLong(row[5]), row[6]);
+            long conceptId = Long.parseLong(row[5]);
+            Set<String> artgIds = artgIdCache.get(conceptId);
+            if (artgIds == null) {
+                artgIds = new HashSet<>();
+            }
+            artgIds.add(row[6]);
+            artgIdCache.put(conceptId, artgIds);
         }
     }
 
@@ -249,7 +255,7 @@ public class ConceptCache {
 		return conceptCache.get(id);
 	}
 
-    public String getArtgId(Long id) {
+    public Set<String> getArtgId(Long id) {
         return artgIdCache.get(id);
     }
 
