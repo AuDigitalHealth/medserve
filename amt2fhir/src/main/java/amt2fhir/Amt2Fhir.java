@@ -311,7 +311,7 @@ public class Amt2Fhir {
     private void addTppExtension(Concept tpp, Medication medication) {
         medication.addUndeclaredExtension(false,
             TPP_EXTENSION_URL,
-            new CodingDt(Concept.SNOMED_CT_SYSTEM_URI, Long.toString(tpp.getId())));
+            tpp.toCodingDt());
     }
 
     private Medication createProductResource(Concept concept) {
