@@ -7,7 +7,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +25,23 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.dstu3.exceptions.FHIRException;
+import org.hl7.fhir.dstu3.model.BaseResource;
+import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.DomainResource;
+import org.hl7.fhir.dstu3.model.Extension;
+import org.hl7.fhir.dstu3.model.Medication;
+import org.hl7.fhir.dstu3.model.Medication.MedicationPackageComponent;
+import org.hl7.fhir.dstu3.model.Medication.MedicationPackageContentComponent;
+import org.hl7.fhir.dstu3.model.Medication.MedicationProductComponent;
+import org.hl7.fhir.dstu3.model.Medication.MedicationProductIngredientComponent;
+import org.hl7.fhir.dstu3.model.Narrative;
+import org.hl7.fhir.dstu3.model.Narrative.NarrativeStatus;
+import org.hl7.fhir.dstu3.model.Quantity;
+import org.hl7.fhir.dstu3.model.Ratio;
+import org.hl7.fhir.dstu3.model.Reference;
+import org.hl7.fhir.dstu3.model.SimpleQuantity;
+import org.hl7.fhir.dstu3.model.Substance;
 
 import amt2fhir.cache.ConceptCache;
 import amt2fhir.enumeration.AmtConcept;
@@ -35,23 +51,6 @@ import amt2fhir.model.DataTypeProperty;
 import amt2fhir.model.Relationship;
 import amt2fhir.util.FileUtils;
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.model.api.ExtensionDt;
-import ca.uhn.fhir.model.dstu2.composite.BoundCodeableConceptDt;
-import ca.uhn.fhir.model.dstu2.composite.CodingDt;
-import ca.uhn.fhir.model.dstu2.composite.NarrativeDt;
-import ca.uhn.fhir.model.dstu2.composite.QuantityDt;
-import ca.uhn.fhir.model.dstu2.composite.RatioDt;
-import ca.uhn.fhir.model.dstu2.composite.ResourceReferenceDt;
-import ca.uhn.fhir.model.dstu2.resource.BaseResource;
-import ca.uhn.fhir.model.dstu2.resource.Medication;
-import ca.uhn.fhir.model.dstu2.resource.Medication.Package;
-import ca.uhn.fhir.model.dstu2.resource.Medication.PackageContent;
-import ca.uhn.fhir.model.dstu2.resource.Medication.Product;
-import ca.uhn.fhir.model.dstu2.resource.Medication.ProductIngredient;
-import ca.uhn.fhir.model.dstu2.resource.Substance;
-import ca.uhn.fhir.model.dstu2.valueset.MedicationKindEnum;
-import ca.uhn.fhir.model.dstu2.valueset.NarrativeStatusEnum;
-import ca.uhn.fhir.model.dstu2.valueset.SubstanceTypeEnum;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.MethodOutcome;
@@ -129,9 +128,9 @@ public class Amt2Fhir {
     }
 
 	public void writeResourcesToFiles(Path outputPath) throws IOException {
-        parser = FhirContext.forDstu2().newJsonParser();
+        parser = FhirContext.forDstu3().newJsonParser();
         parser.setPrettyPrint(true);
-        validator = FhirContext.forDstu2().newValidator();
+        validator = FhirContext.forDstu3().newValidator();
         
         FileUtils.initialiseOutputDirectories(outputPath, "mp");
         FileUtils.initialiseOutputDirectories(outputPath, "mpuu");
@@ -159,7 +158,7 @@ public class Amt2Fhir {
 		// TODO - do some validation of the outcome
 	}
 
-	private void process(BiConsumer<BaseResource, String> consumer) {
+    private void process(BiConsumer<BaseResource, String> consumer) {
 		conceptCache.getMps().values().stream()
 				.map(concept -> createProductResource(concept))
 				.forEach(resource -> consumer.accept(resource, "mp"));
@@ -211,19 +210,18 @@ public class Amt2Fhir {
     }
 
     private String getFileName(BaseResource resource) {
-    	String name;
+        String name;
     	String code;
     	if (resource instanceof Medication) {
 			Medication medication = (Medication) resource;
-			name = medication.getName().replaceAll("/", "_");
+            name = medication.getCode().getCodingFirstRep().getDisplay().replaceAll("/", "_").replaceAll("'", "");
 			code = medication.getCode().getCodingFirstRep().getCode();
 		} else if (resource instanceof Substance) {
 			Substance substance = (Substance) resource;
-			name = substance.getType().getCodingFirstRep().getDisplay().replaceAll("/", "_");
-			code = substance.getType().getCodingFirstRep().getCode();
+            name = substance.getCode().getCodingFirstRep().getDisplay().replaceAll("/", "_").replaceAll("'", "");
+            code = substance.getCode().getCodingFirstRep().getCode();
 		} else {
-			name = resource.getResourceName() + "-" + resource.getId().toString();
-			code = resource.getId().toString();
+            throw new RuntimeException("Unknown resource type " + resource.getClass().getName());
 		}
 
         if (name.length() > 200) {
@@ -237,10 +235,7 @@ public class Amt2Fhir {
 		Substance substance = new Substance();
 		setStandardResourceElements(concept, substance);
 		
-		BoundCodeableConceptDt<SubstanceTypeEnum> type = new BoundCodeableConceptDt<SubstanceTypeEnum>(
-				SubstanceTypeEnum.VALUESET_BINDER);
-		type.setCoding(Arrays.asList(concept.toCodingDt()));
-		substance.setType(type);
+        substance.setCode(concept.toCodeableConcept());
 		concept.getMultipleDestinations(AttributeType.IS_MODIFICATION_OF).forEach(m ->
 				substance.addIngredient().setSubstance(toReference(m, "Substance")));
 		
@@ -251,14 +246,15 @@ public class Amt2Fhir {
 		Medication medication = new Medication();
 		setStandardResourceElements(concept, medication);
 
-	    medication.setName(concept.getPreferredTerm());
-	    medication.setCode(concept.toCodeableConceptDt());
-	    medication.setIsBrand(concept.hasParent(AmtConcept.TPUU));
+        // medication.setName(concept.getPreferredTerm());
+	    medication.setCode(concept.toCodeableConcept());
+        medication.setIsBrand(concept.hasParent(AmtConcept.TPUU) || concept.hasParent(AmtConcept.TPP)
+                || concept.hasParent(AmtConcept.CTPP));
 
         Set<String> artgIds = conceptCache.getArtgId(concept.getId());
         if (artgIds != null) {
             for (String id : artgIds) {
-                CodingDt codingDt = medication.getCode().addCoding();
+                Coding codingDt = medication.getCode().addCoding();
                 codingDt.setSystem("https://www.tga.gov.au/australian-register-therapeutic-goods");
                 codingDt.setCode(id);
             }
@@ -267,30 +263,26 @@ public class Amt2Fhir {
 		return medication;
 	}
 
-	private void setStandardResourceElements(Concept concept,
-			BaseResource resource) {
+    private void setStandardResourceElements(Concept concept, DomainResource resource) {
 		resource.setId(Long.toString(concept.getId()));
-		NarrativeDt narrative = new NarrativeDt();
-		narrative.setStatus(NarrativeStatusEnum.GENERATED);
-		narrative.setDiv("<div><p>" + StringEscapeUtils.escapeHtml3(concept.getPreferredTerm()) + "</p></div>");
+        Narrative narrative = new Narrative();
+        narrative.setStatus(NarrativeStatus.GENERATED);
+        narrative.setDivAsString("<div><p>" + StringEscapeUtils.escapeHtml3(concept.getPreferredTerm()) + "</p></div>");
 		resource.setText(narrative);
 	}
 
-	private Medication createPackageResource(Concept concept) {
+    private Medication createPackageResource(Concept concept) {
         Medication medication = createBaseMedicationResource(concept);
-        medication.setKind(MedicationKindEnum.PACKAGE);
-        ca.uhn.fhir.model.dstu2.resource.Medication.Package pkg = new ca.uhn.fhir.model.dstu2.resource.Medication.Package();
+        MedicationPackageComponent pkg = new MedicationPackageComponent();
         medication.setPackage(pkg);
         
         Concept container = concept.getSingleDestination(AttributeType.HAS_CONTAINER_TYPE);
         if (container != null) {
-        	pkg.setContainer(container.toCodeableConceptDt());
+        	pkg.setContainer(container.toCodeableConcept());
         }
         
-        concept.getRelationships(AttributeType.HAS_MPUU).forEach(
-                r -> addProductReference(pkg, r));
-        concept.getRelationships(AttributeType.HAS_TPUU).forEach(
-                r -> addProductReference(pkg, r));
+        concept.getRelationships(AttributeType.HAS_MPUU).forEach(r -> addProductReference(pkg, r));
+        concept.getRelationships(AttributeType.HAS_TPUU).forEach(r -> addProductReference(pkg, r));
 
         concept.getRelationships(AttributeType.HAS_COMPONENT_PACK).forEach(r -> addProductReference(pkg, r));
         concept.getRelationships(AttributeType.HAS_SUBPACK).forEach(r -> addProductReference(pkg, r));
@@ -305,38 +297,40 @@ public class Amt2Fhir {
                 throw new RuntimeException(
                     "Expect only one tpp for ctpp " + concept.getId() + " but found " + tpps.size());
             }
-            addTppExtension(tpps.iterator().next(), medication);
+            try {
+                addTppExtension(tpps.iterator().next(), medication);
+            } catch (FHIRException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return medication;
 	}
 	
-    private void addTppExtension(Concept tpp, Medication medication) {
-        medication.addUndeclaredExtension(false,
-            TPP_EXTENSION_URL,
-            tpp.toCodingDt());
+    private void addTppExtension(Concept tpp, Medication medication) throws FHIRException {
+        Extension extension = medication.addExtension();
+        extension.setUrl(TPP_EXTENSION_URL);
+        extension.setValue(tpp.toCoding());
     }
 
     private Medication createProductResource(Concept concept) {
 	    Medication medication = createBaseMedicationResource(concept);
-	    medication.setKind(MedicationKindEnum.PRODUCT);
-	    Product product = new Product();
+        MedicationProductComponent product = new MedicationProductComponent();
 	    medication.setProduct(product);
-	
 	    concept.getRelationshipGroupsContaining(AttributeType.HAS_INTENDED_ACTIVE_INGREDIENT).forEach(
 	        r -> addIngredient(product, r));
 	
 	    Concept form = concept.getSingleDestination(AttributeType.HAS_MANUFACTURED_DOSE_FORM);
 	    if (form != null) {
-	        product.setForm(form.toCodeableConceptDt());
+	        product.setForm(form.toCodeableConcept());
 	    }
 	    return medication;
 	}
 
-	private void addProductReference(Package pkg, Relationship relationship) {
-    	PackageContent content = pkg.addContent();
+    private void addProductReference(MedicationPackageComponent pkg, Relationship relationship) {
+        MedicationPackageContentComponent content = pkg.addContent();
 
-        Concept destination;
+        Concept destination = null;
 		// This is a dirty hack because AMT doesn't restate the
 		// HAS_COMPONENT_PACK and HAS_SUBPACK relationships from MPP on TPP. As
 		// a result these relationships on TPPs are the inferred relationships
@@ -353,39 +347,51 @@ public class Amt2Fhir {
 						+ relationship.getSource().toReference()
 						+ " ctpps were " + StringUtils.join(ctpp, "'"));
         	}
-        	
-			destination = conceptCache.getConcept(ctpp.iterator().next()).getParents()
-					.values().stream().filter(m -> m.hasParent(AmtConcept.TPP))
-					.findFirst().get();
+            
+            Set<Concept> destinationSet = conceptCache.getConcept(ctpp.iterator().next())
+                .getRelationships(relationship.getType())
+                .stream()
+                .flatMap(r -> r.getDestination().getParents().values().stream())
+                .filter(c -> c.hasParent(relationship.getDestination()))
+                .collect(Collectors.toSet());
+
+            if (destinationSet.size() != 1) {
+                throw new RuntimeException("Destination set was expected to be 1 but was " + destinationSet);
+            }
+
+            destination = destinationSet.iterator().next();
+
         } else {
         	destination = relationship.getDestination();
     	}
 
         content.setItem(toReference(destination, "Medication"));
         
-        QuantityDt quantity;
+        SimpleQuantity quantity;
         
 		if (relationship.getType().equals(AttributeType.HAS_COMPONENT_PACK)) {
-			quantity = new QuantityDt(1);
+            quantity = new SimpleQuantity();
+            quantity.setValue(1);
 		} else {
 			DataTypeProperty datatypeProperty = relationship.getDatatypeProperty();
 
-			quantity = new QuantityDt(Double.valueOf(datatypeProperty
-					.getValue()));
+            quantity = new SimpleQuantity();
+            quantity.setValue(Double.valueOf(datatypeProperty.getValue()));
 			quantity.setCode(Long.toString(datatypeProperty.getUnit().getId()));
-			quantity.setUnits(datatypeProperty.getUnit().getPreferredTerm());
+            quantity.setUnit(datatypeProperty.getUnit().getPreferredTerm());
 			quantity.setSystem(Concept.SNOMED_CT_SYSTEM_URI);
 		}
 
         content.setAmount(quantity);
 	}
 
-	private void addIngredient(Product product, Collection<Relationship> relationships) {
+    private void addIngredient(MedicationProductComponent product, Collection<Relationship> relationships) {
         Relationship iai = relationships.stream()
             .filter(r -> r.getType().equals(AttributeType.HAS_INTENDED_ACTIVE_INGREDIENT))
             .findFirst()
             .get();
-        ProductIngredient ingredient = product.addIngredient();
+
+        MedicationProductIngredientComponent ingredient = product.addIngredient();
         
         ingredient.setItem(toReference(iai.getDestination(), "Substance"));
         
@@ -396,27 +402,27 @@ public class Amt2Fhir {
         if (hasBoss != null) {
             DataTypeProperty d = hasBoss.getDatatypeProperty();
             
-            ExtensionDt boss = new ExtensionDt();
-            boss.setValue(hasBoss.getDestination().toCodingDt()).setUrl("bossExtension");
-			ingredient.addUndeclaredExtension(boss);
+            Extension boss = new Extension();
+            boss.setValue(hasBoss.getDestination().toCoding()).setUrl("bossExtension");
+            ingredient.addExtension(boss);
             
             Concept denominatorUnit = d.getUnit().getSingleDestination(AttributeType.HAS_DENOMINATOR_UNITS);
             Concept numeratorUnit = d.getUnit().getSingleDestination(AttributeType.HAS_NUMERATOR_UNITS);
 
-            RatioDt value = new RatioDt();
+            Ratio value = new Ratio();
 
-            QuantityDt denominator = new QuantityDt(1L);
+            Quantity denominator = new Quantity(1L);
 
             if (denominatorUnit != null) {
                 denominator.setCode(Long.toString(denominatorUnit.getId()));
-                denominator.setUnits(denominatorUnit.getPreferredTerm());
+                denominator.setUnit(denominatorUnit.getPreferredTerm());
                 denominator.setSystem(Concept.SNOMED_CT_SYSTEM_URI);
             }
             value.setDenominator(denominator);
 
-            QuantityDt numerator = new QuantityDt(Double.parseDouble(d.getValue()));
+            Quantity numerator = new Quantity(Double.parseDouble(d.getValue()));
             numerator.setCode(Long.toString(numeratorUnit.getId()));
-            numerator.setUnits(numeratorUnit.getPreferredTerm());
+            numerator.setUnit(numeratorUnit.getPreferredTerm());
             numerator.setSystem(Concept.SNOMED_CT_SYSTEM_URI);
             value.setNumerator(numerator);
 
@@ -424,11 +430,11 @@ public class Amt2Fhir {
         }
     }
 
-	private ResourceReferenceDt toReference(Concept concept, String resourceType) {
-		ResourceReferenceDt substanceReference = 
-				new ResourceReferenceDt(resourceType + "/" + concept.getId());
+    private Reference toReference(Concept concept, String resourceType) {
+        Reference substanceReference =
+                new Reference(resourceType + "/" + concept.getId());
         substanceReference.setDisplay(concept.getPreferredTerm());
         return substanceReference;
-	}
+    }
 
 }

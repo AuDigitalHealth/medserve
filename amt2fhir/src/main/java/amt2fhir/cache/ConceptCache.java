@@ -79,7 +79,6 @@ public class ConceptCache {
             .filter(id -> !ctpps.keySet().contains(id))
             .filter(id -> !AmtConcept.isEnumValue(Long.toString(id)))
             .forEach(id -> tpps.put(id, conceptCache.get(id)));
-        logger.info("calculated TPP list");
 
         graph.incomingEdgesOf(AmtConcept.MPP.getId())
             .stream()
@@ -172,7 +171,10 @@ public class ConceptCache {
                 graph.addEdge(source, destination);
                 sourceConcept.addParent(destinationConcept);
             } else {
-                long groupId = Long.parseLong(row[6]);
+                long groupId = Integer.parseInt(row[6]);
+                if (groupId == 0) {
+                    groupId = type.getId() + destinationConcept.getId() << 32;
+                }
                 Map<Long, Set<Relationship>> relationshipGroups = sourceConcept.getRelationshipGroups();
                 if (!relationshipGroups.containsKey(groupId)) {
                     relationshipGroups.put(groupId, new HashSet<Relationship>());

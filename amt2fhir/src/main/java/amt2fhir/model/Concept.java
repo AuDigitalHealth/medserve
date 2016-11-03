@@ -8,10 +8,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hl7.fhir.dstu3.model.CodeableConcept;
+import org.hl7.fhir.dstu3.model.Coding;
+
 import amt2fhir.enumeration.AmtConcept;
 import amt2fhir.enumeration.AttributeType;
-import ca.uhn.fhir.model.dstu2.composite.CodeableConceptDt;
-import ca.uhn.fhir.model.dstu2.composite.CodingDt;
 
 public class Concept {
 
@@ -21,8 +22,8 @@ public class Concept {
     private String preferredTerm;
     private Map<Long, Set<Relationship>> relationshipGroups = new HashMap<>();
     private Map<Long, Concept> parents = new HashMap<>();
-    private CodeableConceptDt codableConceptDt;
-    private CodingDt codingDt;
+    private CodeableConcept codableConcept;
+    private Coding coding;
 
     public Concept(long id) {
         this.id = id;
@@ -64,22 +65,21 @@ public class Concept {
         this.relationshipGroups = relationshipGroups;
     }
 
-    public CodeableConceptDt toCodeableConceptDt() {
-        if (codableConceptDt == null) {
-            codableConceptDt = new CodeableConceptDt();
-            List<CodingDt> list = new ArrayList<>();
-            list.add(toCodingDt());
-            codableConceptDt.setCoding(list);
+    public CodeableConcept toCodeableConcept() {
+        if (codableConcept == null) {
+            codableConcept = new CodeableConcept();
+            List<Coding> list = new ArrayList<>();
+            list.add(toCoding());
+            codableConcept.setCoding(list);
         }
-        return codableConceptDt;
+        return codableConcept;
     }
 
-    public CodingDt toCodingDt() {
-        if (codingDt == null) {
-            codingDt = new CodingDt(SNOMED_CT_SYSTEM_URI, Long.toString(getId()));
-            codingDt.setDisplay(getPreferredTerm());
+    public Coding toCoding() {
+        if (coding == null) {
+            coding = new Coding(SNOMED_CT_SYSTEM_URI, Long.toString(getId()), getPreferredTerm());
         }
-        return codingDt;
+        return coding;
     }
 
     public Concept getSingleDestination(AttributeType relationshipType) {
@@ -118,6 +118,10 @@ public class Concept {
 
     public boolean hasParent(AmtConcept amtConcept) {
         return parents.containsKey(amtConcept.getId());
+    }
+
+    public boolean hasParent(Concept concept) {
+        return parents.containsKey(concept.getId());
     }
 
 	public Map<Long, Concept> getParents() {
