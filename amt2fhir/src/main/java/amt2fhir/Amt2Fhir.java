@@ -122,7 +122,7 @@ public class Amt2Fhir {
     }
     
     public void postToFhirServer(String url) {
-		client = FhirContext.forDstu2().newRestfulGenericClient(url);
+        client = FhirContext.forDstu3().newRestfulGenericClient(url);
 		
         process(getCreateResourceConsumer(url));
     }
