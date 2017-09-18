@@ -79,8 +79,8 @@
 				<groupId>online.medserve.server</groupId>
 				<artifactId>index-builder</artifactId>
 				<configuration>
-					<amtSnapshot>/Users/dion/NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-20170430-SNAPSHOT.zip</amtSnapshot>
-					<pbsExtract>/Users/dion/2017-05-01-extracts.zip</pbsExtract>
+					<amtSnapshot>/Users/dion/NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-20170831-SNAPSHOT.zip</amtSnapshot>
+					<pbsExtract>/Users/dion/2017-09-01-extracts.zip</pbsExtract>
 				</configuration>
 				<executions>
 					<execution>

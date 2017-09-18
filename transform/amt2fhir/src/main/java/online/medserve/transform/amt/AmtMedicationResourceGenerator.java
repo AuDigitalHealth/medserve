@@ -40,6 +40,7 @@ import org.hl7.fhir.dstu3.model.UriType;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.validation.FhirValidator;
 import online.medserve.extension.ExtendedMedication;
+import online.medserve.extension.ExtendedReference;
 import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.MedicationSourceExtension;
@@ -153,7 +154,17 @@ public class AmtMedicationResourceGenerator {
         }
 
         if (concept.hasAtLeastOneMatchingAncestor(AmtConcept.TP)) {
-            Concept brand = concept.getAncestors(AmtConcept.TP).iterator().next();
+            if (concept.getAncestors(AmtConcept.TP)
+                .stream()
+                .filter(c -> !AmtConcept.isEnumValue(c.getId()))
+                .count() > 1) {
+                throw new RuntimeException("more than one TP " + concept.getAncestors(AmtConcept.TP));
+            }
+            Concept brand = concept.getAncestors(AmtConcept.TP)
+                .stream()
+                .filter(c -> !AmtConcept.isEnumValue(c.getId()))
+                .iterator()
+                .next();
             medication.setBrand(brand.toCodeableConcept());
         } else if (concept.hasAtLeastOneMatchingAncestor(AmtConcept.TPP)) {
             Concept brand = concept.getSingleDestination(AttributeType.HAS_TP);
@@ -206,7 +217,7 @@ public class AmtMedicationResourceGenerator {
     }
 
     private Reference createPackageResource(Concept concept, List<Resource> createdResources) {
-        Reference reference = toReference(concept, "Medication");
+        Reference reference = toExtendedMedicationReference(concept, createdResources);
         if (!processedConcepts.contains(Long.toString(concept.getId()))) {
             processedConcepts.add(Long.toString(concept.getId()));
             ExtendedMedication medication = createBaseMedicationResource(concept, createdResources);
@@ -249,6 +260,7 @@ public class AmtMedicationResourceGenerator {
         }
         return reference;
     }
+
 
     private Reference createOrganisation(List<Resource> createdResources, Manufacturer manufacturer) {
         Reference orgRef = new Reference("Organization/" + manufacturer.getCode());
@@ -312,7 +324,7 @@ public class AmtMedicationResourceGenerator {
     }
 
     private Reference createProductResource(Concept concept, List<Resource> createdResources) {
-        Reference reference = toReference(concept, "Medication");
+        Reference reference = toExtendedMedicationReference(concept, createdResources);
         if (!processedConcepts.contains(Long.toString(concept.getId()))) {
             processedConcepts.add(Long.toString(concept.getId()));
             ExtendedMedication medication = createBaseMedicationResource(concept, createdResources);
@@ -445,9 +457,18 @@ public class AmtMedicationResourceGenerator {
     }
 
     private Reference toReference(Concept concept, String resourceType) {
-        Reference substanceReference =
+        Reference reference =
                 new Reference(resourceType + "/" + concept.getId());
-        substanceReference.setDisplay(concept.getPreferredTerm());
-        return substanceReference;
+        reference.setDisplay(concept.getPreferredTerm());
+        return reference;
+    }
+
+    private ExtendedReference toExtendedMedicationReference(Concept concept, List<Resource> createdResources) {
+        ExtendedReference reference =
+                new ExtendedReference("Medication/" + concept.getId());
+        reference.setDisplay(concept.getPreferredTerm());
+        addParentExtensions(concept, reference, new HashSet<>(), createdResources);
+        reference.setMedicationResourceType(concept.getMedicationType().getCode());
+        return reference;
     }
 }

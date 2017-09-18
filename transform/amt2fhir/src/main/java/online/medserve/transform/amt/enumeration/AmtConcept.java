@@ -52,4 +52,7 @@ public enum AmtConcept {
         return instanceMap.containsKey(Long.parseLong(idString));
     }
 
+    public static boolean isEnumValue(long id) {
+        return instanceMap.containsKey(id);
+    }
 }

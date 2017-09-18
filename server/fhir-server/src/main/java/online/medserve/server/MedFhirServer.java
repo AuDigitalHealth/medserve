@@ -44,7 +44,6 @@ public class MedFhirServer extends RestfulServer {
         resourceProviders.add(new MedicationResourceProvider(index));
         resourceProviders.add(new SubstanceResourceProvider(index));
         resourceProviders.add(new OrganizationResourceProvider(index));
-        resourceProviders.add()
         setResourceProviders(resourceProviders);
         setDefaultResponseEncoding(EncodingEnum.JSON);
 
