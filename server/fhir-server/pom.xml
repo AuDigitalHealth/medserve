@@ -58,6 +58,19 @@
 			<version>2.1.1</version>
 		</dependency>
 
+		<!-- Required to enable the CORS interceptor within HAPI, see: http://hapifhir.io/doc_cors.html -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>4.3.9.RELEASE</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
 	</dependencies>
 
 	<build>
