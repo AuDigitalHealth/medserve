@@ -2,6 +2,7 @@ package online.medserve.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -11,10 +12,12 @@ import ca.uhn.fhir.rest.server.EncodingEnum;
 import ca.uhn.fhir.rest.server.FifoMemoryPagingProvider;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import ca.uhn.fhir.rest.server.RestfulServer;
+import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
 import online.medserve.server.index.Index;
 import online.medserve.server.resourceprovider.MedicationResourceProvider;
 import online.medserve.server.resourceprovider.OrganizationResourceProvider;
 import online.medserve.server.resourceprovider.SubstanceResourceProvider;
+import org.springframework.web.cors.CorsConfiguration;
 
 @WebServlet(urlPatterns = { "/*" }, displayName = "FHIR Server")
 public class MedFhirServer extends RestfulServer {
@@ -50,5 +53,23 @@ public class MedFhirServer extends RestfulServer {
         pp.setDefaultPageSize(10);
         pp.setMaximumPageSize(100);
         setPagingProvider(pp);
+
+        // Define CORS configuration.
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedHeader("x-fhir-starter");
+        config.addAllowedHeader("Origin");
+        config.addAllowedHeader("Accept");
+        config.addAllowedHeader("X-Requested-With");
+        config.addAllowedHeader("Content-Type");
+
+        config.addAllowedOrigin("*");
+
+        config.addExposedHeader("Location");
+        config.addExposedHeader("Content-Location");
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // Create the CORS interceptor and register it.
+        CorsInterceptor interceptor = new CorsInterceptor(config);
+        registerInterceptor(interceptor);
     }
 }
