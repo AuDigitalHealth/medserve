@@ -86,18 +86,21 @@
 							<p>The implementation is broken down into two pieces, a process which maps between medication terminologies (at this point only AMT) and Medication resources, and a server built using the excellent <a href="http://hapifhir.io/doc_rest_server.html">HAPI RESTful Server</a> containerised as a Docker image.
 							<p>However there is also a command line tool which can pipe drug terminology release data through the resouce generator(s) and output FHIR resources as files, or push them at a FHIR server using batch create operations.</p>
 							<p>The server's endpoint http://medserve.online/fhir provides access to the resources and the FHIR resource search API with Medication specific parameters.</p>
-							<p>This <a href="https://www.getpostman.com/collections/dd8001cdae4584e9ba04">Postman collection</a> shows how the parameters can be used. To use this collection <a href="https://www.getpostman.com/docs/postman/environments_and_globals/manage_environments">set an environment variable</a> "url" to "medserve.online", or <a href="MedServe.postman_environment">import this environment.</a><div class="postman-run-button"
-data-postman-action="collection/import"
-data-postman-var-1="dd8001cdae4584e9ba04"></div>
-<script type="text/javascript">
-  (function (p,o,s,t,m,a,n) {
-    !p[s] && (p[s] = function () { (p[t] || (p[t] = [])).push(arguments); });
-    !o.getElementById(s+t) && o.getElementsByTagName("head")[0].appendChild((
-      (n = o.createElement("script")),
-      (n.id = s+t), (n.async = 1), (n.src = m), n
-    ));
-  }(window, document, "_pm", "PostmanRunObject", "https://run.pstmn.io/button.js"));
-</script></p>
+							<p>A sample Postman collection shows how the parameters can be used, click the "Run in Postman" button to get started.
+								<div class="postman-run-button"
+								data-postman-action="collection/import"
+								data-postman-var-1="dd8001cdae4584e9ba04"
+								data-postman-param="env%5BMedServe%5D=W3siZW5hYmxlZCI6dHJ1ZSwia2V5IjoidXJsIiwidmFsdWUiOiJtZWRzZXJ2ZS5vbmxpbmUiLCJ0eXBlIjoidGV4dCJ9XQ=="></div>
+								<script type="text/javascript">
+								  (function (p,o,s,t,m,a,n) {
+								    !p[s] && (p[s] = function () { (p[t] || (p[t] = [])).push(arguments); });
+								    !o.getElementById(s+t) && o.getElementsByTagName("head")[0].appendChild((
+								      (n = o.createElement("script")),
+								      (n.id = s+t), (n.async = 1), (n.src = m), n
+								    ));
+								  }(window, document, "_pm", "PostmanRunObject", "https://run.pstmn.io/button.js"));
+								</script></p>
+
 				</div>
 				<div class="row 150%">
 					<header class="major">
@@ -112,7 +115,7 @@ data-postman-var-1="dd8001cdae4584e9ba04"></div>
 								<li><strong>Concept type</strong> - a code from a set of categories akin to the AMT concept classes CTPP, TPP, MPP...etc. but deliberately not AMT specific so it can also be used to line up across AMT, RxNorm, dm+d etc. This operates like a tag that indicates what level of granularity the Medication resource is representing – e.g. a generic drug or a trade package.</li>
 								<li><strong>Parents</strong> - this provides details of the hierarchy of parents above a medication sourced from the terminology as a useful set of pre-processed data.</li>
 							</ul></p>
-							<p>Parameters have also been added to the Medication search operation to support these extensions. <a href="https://www.getpostman.com/collections/dd8001cdae4584e9ba04">The Postman collection</a> provides examples of how to use these extended parameters to search based on the extension content in combination with the standard Medication resource search parameters.</p>
+							<p>Parameters have also been added to the Medication search operation to support these extensions. The Postman collection provides examples of how to use these extended parameters to search based on the extension content in combination with the standard Medication resource search parameters.</p>
 						</div>
 					</div>
 					<div class="row 150%">
