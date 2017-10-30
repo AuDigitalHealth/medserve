@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<!--
+	Photon by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Medserve</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-108905175-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-108905175-1');
+</script>
+
+	</head>
+	<body>
+
+		<!-- Header -->
+			<section id="header">
+				<div class="inner">
+					<span class="icon major fa-medkit"></span>
+					<h1>Medserve</h1>
+					<p>HL7 FHIR Medication resource rendering of<br />
+					medicines terminologies.</p>
+					<ul class="actions">
+						<li><a href="#one" class="button scrolly">Discover</a></li>
+					</ul>
+				</div>
+			</section>
+		<!-- One -->
+			<section id="one" class="main style1">
+				<div class="container">
+					<div class="row 150%">
+						<div class="6u 12u$(medium)">
+							<header class="major">
+								<h2>What's the big idea?</h2>
+							</header>
+							<p>Medication terminologies like AMT, dm+d, RxNorm...etc. come in different formats with different content models. Wouldn't it be nice if there was an easy way of using these medication terminologies through a common API that abstracted away complexity?</br></br>That's the idea behind Medserve, to make using and implementing medicines terminologies easier.</p>
+						</div>
+						<div class="6u$ 12u$(medium) important(medium)">
+							<span class="image fit"><img src="images/medserve_diagram.png" alt="" /></span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+		<!-- Two -->
+			<section id="two" class="main style2">
+				<div class="container">
+					<div class="row 150%">
+						<!-- <div class="6u 12u$(medium)">
+							<ul class="major-icons">
+								<li><span class="icon style1 major fa-code"></span></li>
+								<li><span class="icon style2 major fa-bolt"></span></li>
+								<li><span class="icon style3 major fa-camera-retro"></span></li>
+								<li><span class="icon style4 major fa-cog"></span></li>
+								<li><span class="icon style5 major fa-desktop"></span></li>
+								<li><span class="icon style6 major fa-calendar"></span></li>
+							</ul>
+						</div> -->
+						<div class="12u$ 12u$(medium)">
+							<header class="major">
+								<h2>What is Medserve?</h2>
+							</header>
+							<p>Medserve is an experiment, a prototype, aimed at exposing medication terminologies through a common easy to use API. More than that, the Medication resources also provide an opportunity to merge in other useful content from other sources - for example Pharmaceutical Benefits Scheme data to save developers the effort of looking up maps and reading yet another data source format.</p>
+							<p>HL7 FHIR's Medication resource and associated resources API and Medication specific parameters makes a really great candidate.</p>
+						</div>
+					</div>
+					<div class="row 150%">
+						<div class="12u$ 12u$(medium)">
+							<header class="major">
+								<h2>How does it work?</h2>
+							</header>
+							<span class="image left"><img src="images/medserve_diagram_detail.png" alt="" /></span>
+							<p>The implementation is broken down into two pieces, a process which maps between medication terminologies (at this point only AMT) and Medication resources, and a server built using the excellent <a href="http://hapifhir.io/doc_rest_server.html">HAPI RESTful Server</a> containerised as a Docker image.
+							<p>However there is also a command line tool which can pipe drug terminology release data through the resouce generator(s) and output FHIR resources as files, or push them at a FHIR server using batch create operations.</p>
+							<p>The server's endpoint http://medserve.online/fhir provides access to the resources and the FHIR resource search API with Medication specific parameters.</p>
+							<p>This <a href="https://www.getpostman.com/collections/dd8001cdae4584e9ba04">Postman collection</a> shows how the parameters can be used. To use this collection <a href="https://www.getpostman.com/docs/postman/environments_and_globals/manage_environments">set an environment variable</a> "url" to "medserve.online", or <a href="MedServe.postman_environment">import this environment.</a><div class="postman-run-button"
+data-postman-action="collection/import"
+data-postman-var-1="dd8001cdae4584e9ba04"></div>
+<script type="text/javascript">
+  (function (p,o,s,t,m,a,n) {
+    !p[s] && (p[s] = function () { (p[t] || (p[t] = [])).push(arguments); });
+    !o.getElementById(s+t) && o.getElementsByTagName("head")[0].appendChild((
+      (n = o.createElement("script")),
+      (n.id = s+t), (n.async = 1), (n.src = m), n
+    ));
+  }(window, document, "_pm", "PostmanRunObject", "https://run.pstmn.io/button.js"));
+</script></p>
+				</div>
+				<div class="row 150%">
+					<header class="major">
+						<h2>Extensions</h2>
+					</header>
+					<div class="12u$ 12u$(medium)">
+						<p>The Medication resources include a number of extensions which are briefly described below (more documentation coming soon!)
+							<ul class="alt">
+								<li><strong>Brand</strong> - currently the Medication resource allows only a Boolean is-brand element, this extension provides for a brand name or code(s)</li>
+								<li><strong>Basis of Strength Substance</strong> - AMT uses a "Basis of Strength Substance" which the strength of an ingredient is stated in terms of, this is a <em>modifier extension because the strength cannot be correctly interpreted without it</em></li>
+								<li><strong>Subsidy</strong> - an experiment to pull in useful subsidy content, at this stage using PBS data with AMT</li>
+								<li><strong>Concept type</strong> - a code from a set of categories akin to the AMT concept classes CTPP, TPP, MPP...etc. but deliberately not AMT specific so it can also be used to line up across AMT, RxNorm, dm+d etc. This operates like a tag that indicates what level of granularity the Medication resource is representing – e.g. a generic drug or a trade package.</li>
+								<li><strong>Parents</strong> - this provides details of the hierarchy of parents above a medication sourced from the terminology as a useful set of pre-processed data.</li>
+							</ul></p>
+							<p>Parameters have also been added to the Medication search operation to support these extensions. <a href="https://www.getpostman.com/collections/dd8001cdae4584e9ba04">The Postman collection</a> provides examples of how to use these extended parameters to search based on the extension content in combination with the standard Medication resource search parameters.</p>
+						</div>
+					</div>
+					<div class="row 150%">
+						<header class="major">
+							<h2>Feedback</h2>
+						</header>
+						<div class="12u$ 12u$(medium)">
+ 							 <p>These extensions, in fact the whole thing is an attempt to create useful content for developers. Feedback is definitely sought on the relative usefulness of the extensions or any aspect of the services.</p>
+							 <p>A proper open source site with collaborative tools (i.e. issue tracking and wiki) is coming soon with more documentation. For the moment to get in touch, comment, or ask questions use Twitter <a class="twitter-hashtag-button" href="https://twitter.com/intent/tweet?button_hashtag=MedserveOnFHIR">	#MedserveOnFHIR</a></p>
+							</div>
+						</div>
+				</div>
+			</section>
+
+		<!-- Footer -->
+			<section id="footer">
+				<ul class="icons">
+					<li><a href="https://twitter.com/intent/tweet?button_hashtag=MedserveOnFHIR" class="icon alt fa-twitter"><span class="label">Twitter</span></a></li>
+				</ul>
+				<ul class="copyright"><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				</ul>
+			</section>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
