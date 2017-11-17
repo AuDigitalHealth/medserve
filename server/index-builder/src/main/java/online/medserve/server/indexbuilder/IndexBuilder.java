@@ -30,7 +30,7 @@ import online.medserve.transform.amt.AmtMedicationResourceGenerator;
 /**
  * Creates an index of Medication resources for the FHIR server
  */
-@Mojo(name = "indexbuilder", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
+@Mojo(name = "indexbuilder", defaultPhase = LifecyclePhase.INSTALL)
 public class IndexBuilder
     extends AbstractMojo
 {
