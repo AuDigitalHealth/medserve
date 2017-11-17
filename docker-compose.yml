@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  medserve:
+    image: medserve
+    expose:
+      - "8080"
+  proxy:
+    image: medserve-proxy
+    ports:
+      - "80:80"
+    links:
+      - medserve
