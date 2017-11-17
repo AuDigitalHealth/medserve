@@ -8,6 +8,8 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
+import org.springframework.web.cors.CorsConfiguration;
+
 import ca.uhn.fhir.rest.server.EncodingEnum;
 import ca.uhn.fhir.rest.server.FifoMemoryPagingProvider;
 import ca.uhn.fhir.rest.server.IResourceProvider;
@@ -17,9 +19,8 @@ import online.medserve.server.index.Index;
 import online.medserve.server.resourceprovider.MedicationResourceProvider;
 import online.medserve.server.resourceprovider.OrganizationResourceProvider;
 import online.medserve.server.resourceprovider.SubstanceResourceProvider;
-import org.springframework.web.cors.CorsConfiguration;
 
-@WebServlet(urlPatterns = { "/*" }, displayName = "FHIR Server")
+@WebServlet(displayName = "FHIR Server")
 public class MedFhirServer extends RestfulServer {
     private static final long serialVersionUID = 1L;
 
