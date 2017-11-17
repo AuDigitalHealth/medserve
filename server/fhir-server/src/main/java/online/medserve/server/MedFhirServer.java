@@ -20,7 +20,7 @@ import online.medserve.server.resourceprovider.MedicationResourceProvider;
 import online.medserve.server.resourceprovider.OrganizationResourceProvider;
 import online.medserve.server.resourceprovider.SubstanceResourceProvider;
 
-@WebServlet(displayName = "FHIR Server")
+@WebServlet(urlPatterns = { "/fhir/*" }, displayName = "FHIR Server")
 public class MedFhirServer extends RestfulServer {
     private static final long serialVersionUID = 1L;
 
