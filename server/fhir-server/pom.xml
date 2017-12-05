@@ -92,8 +92,8 @@
 				<groupId>online.medserve.server</groupId>
 				<artifactId>index-builder</artifactId>
 				<configuration>
-					<amtSnapshot>/Users/dion/terminology/NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-20171031-SNAPSHOT.zip</amtSnapshot>
-					<pbsExtract>/Users/dion/terminology/2017-10-01-extracts-down-converted.zip</pbsExtract>
+					<amtSnapshot>/Users/dion/terminology/NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-20171130-SNAPSHOT.zip</amtSnapshot>
+					<pbsExtract>/Users/dion/terminology/2017-12-01-extracts-down-converted.zip</pbsExtract>
 				</configuration>
 				<executions>
 					<execution>
