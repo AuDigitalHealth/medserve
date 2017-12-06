@@ -1,15 +1,16 @@
-version: "3"
+version: "2"
 
 services:
   medserve:
-    image: medserve
+    image: dionmcm/medserve
     expose:
       - "8080"
   proxy:
-    image: medserve-proxy
+    image: dionmcm/medserve-proxy
     ports:
+      - "80:80"
       - "443:443"
     links:
       - medserve
     volumes:
-      - /etc/letsencrypt/live/medserve.online:/etc/ssl
+      - /etc/letsencrypt:/etc/letsencrypt
