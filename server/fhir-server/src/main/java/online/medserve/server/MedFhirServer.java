@@ -73,7 +73,7 @@ public class MedFhirServer extends RestfulServer {
         CorsInterceptor interceptor = new CorsInterceptor(config);
         registerInterceptor(interceptor);
 
-        // Set base FHIR endpoint, based upon the `medserve.fhir.base` configuration variable.
+        // Set base FHIR endpoint, based upon the `MEDSERVE_FHIR_BASE` configuration variable.
         if (baseUrl != null && baseUrl != "") {
             setServerAddressStrategy(new HardcodedServerAddressStrategy(baseUrl));
         }
