@@ -8,12 +8,10 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
+import ca.uhn.fhir.rest.server.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.cors.CorsConfiguration;
 
-import ca.uhn.fhir.rest.server.EncodingEnum;
-import ca.uhn.fhir.rest.server.FifoMemoryPagingProvider;
-import ca.uhn.fhir.rest.server.IResourceProvider;
-import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
 import online.medserve.server.index.Index;
 import online.medserve.server.resourceprovider.MedicationResourceProvider;
@@ -23,6 +21,8 @@ import online.medserve.server.resourceprovider.SubstanceResourceProvider;
 @WebServlet(urlPatterns = { "/fhir/*" }, displayName = "FHIR Server")
 public class MedFhirServer extends RestfulServer {
     private static final long serialVersionUID = 1L;
+
+    private String baseUrl = System.getenv("MEDSERVE_FHIR_BASE");
 
     private static FifoMemoryPagingProvider pp = new FifoMemoryPagingProvider(100);
 
@@ -72,5 +72,10 @@ public class MedFhirServer extends RestfulServer {
         // Create the CORS interceptor and register it.
         CorsInterceptor interceptor = new CorsInterceptor(config);
         registerInterceptor(interceptor);
+
+        // Set base FHIR endpoint, based upon the `MEDSERVE_FHIR_BASE` configuration variable.
+        if (baseUrl != null && baseUrl != "") {
+            setServerAddressStrategy(new HardcodedServerAddressStrategy(baseUrl));
+        }
     }
 }

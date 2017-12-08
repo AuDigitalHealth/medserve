@@ -5,6 +5,8 @@ services:
     image: dionmcm/medserve
     expose:
       - "8080"
+    environment:
+      MEDSERVE_FHIR_BASE: https://medserve.online/fhir
   proxy:
     image: dionmcm/medserve-proxy
     ports:
