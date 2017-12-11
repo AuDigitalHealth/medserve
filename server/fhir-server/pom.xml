@@ -75,7 +75,7 @@
 
 	<build>
 
-		<!-- Tells Maven to name the generated WAR file as hapi-fhir-jpaserver-example.war -->
+		<!-- Tells Maven to name the generated WAR file as med-fhir-server.war -->
 		<finalName>med-fhir-server</finalName>
 
 		<plugins>
@@ -103,6 +103,27 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>dockerfile-maven-plugin</artifactId>
+				<version>${dockerfile-maven-version}</version>
+				<executions>
+					<execution>
+						<id>default</id>
+						<goals>
+							<goal>build</goal>
+							<goal>push</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<repository>dionmcm/medserve</repository>
+					<tag>${project.version}</tag>
+					<buildArgs>
+						<JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+					</buildArgs>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
