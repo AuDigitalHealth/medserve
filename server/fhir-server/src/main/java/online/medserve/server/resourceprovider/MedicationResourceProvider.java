@@ -57,7 +57,8 @@ public class MedicationResourceProvider implements IResourceProvider {
     @Search(type = ExtendedMedication.class)
     public IBundleProvider search(
             @OptionalParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
-            @OptionalParam(name = FieldNames.PARENT) @Description(shortDefinition = "Search for resources covered by but more specific than the specified abstract medication") TokenAndListParam parent,
+            @OptionalParam(name = FieldNames.PARENT) @Description(shortDefinition = "Deprecated, use ancestor instead. Search for resources covered by but more specific than the specified abstract medication") TokenAndListParam parent,
+            @OptionalParam(name = FieldNames.ANCESTOR) @Description(shortDefinition = "Search for resources covered by but more specific than the specified abstract medication") TokenAndListParam ancestor,
             @OptionalParam(name = FieldNames.MEDICATION_RESOURCE_TYPE) @Description(shortDefinition = "Search for resources with the specified resource type") StringOrListParam medicationResourceType,
             @OptionalParam(name = ExtendedMedication.SP_FORM) TokenAndListParam form,
             @OptionalParam(name = ExtendedMedication.SP_CONTAINER) TokenAndListParam container,
@@ -69,7 +70,7 @@ public class MedicationResourceProvider implements IResourceProvider {
             @OptionalParam(name = FieldNames.SUBSIDY_CODE) @Description(shortDefinition = "Search for resources with the specified subsidy code") TokenAndListParam subsidyCode,
             @Count Integer theCount) throws IOException {
         final InstantDt searchTime = InstantDt.withCurrentTime();
-        final int size = index.getMedicationsByParametersSize(ExtendedMedication.class, text, parent,
+        final int size = index.getMedicationsByParametersSize(ExtendedMedication.class, text, parent, ancestor,
             medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
             subsidyCode);
 
@@ -85,10 +86,9 @@ public class MedicationResourceProvider implements IResourceProvider {
                 if (theFromIndex >= size) {
                     return Collections.emptyList();
                 }
-                return index.getMedicationsByParameters(ExtendedMedication.class, text, parent,
-                    medicationResourceType, form,
-                    container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, theFromIndex,
-                    theToIndex);
+                return index.getMedicationsByParameters(ExtendedMedication.class, text, parent, ancestor,
+                    medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
+                    subsidyCode, theFromIndex, theToIndex);
             }
 
             @Override

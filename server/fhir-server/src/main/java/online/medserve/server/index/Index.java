@@ -81,35 +81,40 @@ public class Index {
     }
 
     public int getMedicationsByParametersSize(Class<ExtendedMedication> clazz, StringAndListParam text,
-            TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
-            TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
-            TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer, TokenAndListParam subsidyCode)
+            TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
+            TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
+            TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
+            TokenAndListParam subsidyCode)
             throws IOException {
-        Query query = getMedicationsByParametersQuery(clazz, text, parent, medicationResourceType, form,
+        Query query = getMedicationsByParametersQuery(clazz, text, parent, ancestor, medicationResourceType, form,
             container, ingredient, packageItem,
             brand, isBrand, manufacturer, subsidyCode);
         return searcher.count(query);
     }
 
     public List<IBaseResource> getMedicationsByParameters(Class<ExtendedMedication> clazz, StringAndListParam text,
-            TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
-            TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
-            TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer, TokenAndListParam subsidyCode,
-            int theFromIndex, int theToIndex) {
+            TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
+            TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
+            TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
+            TokenAndListParam subsidyCode, int theFromIndex, int theToIndex) {
 
-        Query query = getMedicationsByParametersQuery(clazz, text, parent, medicationResourceType, form,
+        Query query = getMedicationsByParametersQuery(clazz, text, parent, ancestor, medicationResourceType, form,
             container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode);
 
         return getResources(clazz, theFromIndex, theToIndex, query);
     }
 
     private BooleanQuery getMedicationsByParametersQuery(Class<ExtendedMedication> clazz, StringAndListParam text,
-            TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
-            TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
-            TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer, TokenAndListParam subsidyCode) {
+            TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
+            TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
+            TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
+            TokenAndListParam subsidyCode) {
         Builder builder = QueryBuilder.createTextSearchBuilder(clazz, text);
 
         QueryBuilder.addOptionalReferenceAndList(parent, builder, FieldNames.PARENT,
+            ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
+
+        QueryBuilder.addOptionalReferenceAndList(ancestor, builder, FieldNames.ANCESTOR,
             ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
 
         QueryBuilder.addOptionalStringOrList(medicationResourceType, builder, FieldNames.MEDICATION_RESOURCE_TYPE);

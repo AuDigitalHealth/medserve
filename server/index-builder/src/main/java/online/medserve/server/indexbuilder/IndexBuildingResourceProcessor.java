@@ -96,7 +96,8 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
         document.add(new StringField(FieldNames.MEDICATION_RESOURCE_TYPE,
             medication.getMedicationResourceType().getCode(), Store.NO));
 
-        indexParents(document, medication);
+        indexParents(document, medication, FieldNames.ANCESTOR);
+        indexParents(document, medication, FieldNames.PARENT);
 
         if (medication.hasIsBrand()) {
             document.add(new StringField(FieldNames.IS_BRAND, Boolean.toString(medication.getIsBrand()), Store.NO));
@@ -178,12 +179,14 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
         }
     }
 
-    private void indexParents(Document document, ParentExtendedElement medication) {
+    private void indexParents(Document document, ParentExtendedElement medication, String fieldName) {
         for (MedicationParentExtension parent : medication.getParentMedicationResources()) {
             try {
-                indexReference(document, parent.getParentMedication(), FieldNames.PARENT,
+                indexReference(document, parent.getParentMedication(), fieldName,
                     ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
-                indexParents(document, parent);
+                if (fieldName.equals(FieldNames.ANCESTOR)) {
+                    indexParents(document, parent, fieldName);
+                }
             } catch (FHIRException e) {
                 throw new RuntimeException("Cannot get reference for medication abstraction " + parent, e);
             }

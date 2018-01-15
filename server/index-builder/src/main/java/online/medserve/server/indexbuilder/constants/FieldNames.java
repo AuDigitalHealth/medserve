@@ -13,11 +13,12 @@ public final class FieldNames {
     public static final String JSON = "json";
     public static final String MANUFACTURER = "manufacturer";
     public static final String PACKAGE_ITEM = "package-item";
-    public static final String PARENT = "parent";
+    public static final String ANCESTOR = "ancestor";
     public static final String RESOURCE_TYPE = "resourceType";
     public static final String SUBSIDY_CODE = "subsidy-code";
     public static final String TEXT_FIELD_SUFFIX = "-text";
     public static final String MEDICATION_RESOURCE_TYPE = "medication-resource-type";
+    public static final String PARENT = "parent";
 
     private FieldNames() {
         throw new AssertionError("Constants class not to be constructed!");
