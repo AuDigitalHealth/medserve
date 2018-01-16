@@ -17,7 +17,7 @@
 		<amtSnapshot>/Users/dion/terminology/NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-20171231-SNAPSHOT.zip</amtSnapshot>
 		<pbsExtract>/Users/dion/terminology/2018-01-01-extracts-down-converted.zip</pbsExtract>
 	</properties>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>online.medserve</groupId>
@@ -75,7 +75,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
+		<dependency>
+			<groupId>io.sentry</groupId>
+			<artifactId>sentry</artifactId>
+			<version>1.6.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>
