@@ -7,6 +7,13 @@ services:
       - "8080"
     environment:
       MEDSERVE_FHIR_BASE: https://medserve.online/fhir
+      SENTRY_DSN: ${SENTRY_DSN}
+  polecat:
+    image: johngrimes/polecat
+    expose:
+      - "80"
+    environment:
+      POLECAT_FHIR_SERVER: https://medserve.online/fhir
   proxy:
     image: dionmcm/medserve-proxy
     ports:
