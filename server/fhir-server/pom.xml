@@ -75,10 +75,16 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
 			<version>1.6.4</version>
+		</dependency>
+		<dependency>
+			<groupId>io.sentry</groupId>
+			<artifactId>sentry-logback</artifactId>
+			<version>1.1.0</version>
 		</dependency>
 	</dependencies>
 
@@ -117,23 +123,29 @@
 				<groupId>com.spotify</groupId>
 				<artifactId>dockerfile-maven-plugin</artifactId>
 				<version>${dockerfile-maven-version}</version>
+
 				<executions>
 					<execution>
-						<id>default</id>
+						<phase>install</phase>
+						<id>build docker image</id>
 						<goals>
 							<goal>build</goal>
+						</goals>
+					</execution>
+					<execution>
+						<phase>deploy</phase>
+						<id>push docker image</id>
+						<goals>
 							<goal>push</goal>
 						</goals>
 					</execution>
 				</executions>
 				<configuration>
 					<repository>dionmcm/medserve</repository>
-					<tag>${project.version}</tag>
-					<buildArgs>
-						<JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
-					</buildArgs>
+					<tag>latest</tag>
 				</configuration>
 			</plugin>
+
 		</plugins>
 	</build>
 
