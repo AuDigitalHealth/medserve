@@ -31,6 +31,7 @@
 					</execution>
 				</executions>
 				<configuration>
+  <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
 					<repository>dionmcm/medserve-proxy</repository>
 					<tag>latest</tag>
 				</configuration>
