@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Medication;
@@ -21,7 +22,6 @@ import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import ca.uhn.fhir.rest.param.TokenParam;
-import ca.uhn.fhir.rest.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import online.medserve.extension.ExtendedMedication;
 import online.medserve.server.Util;
@@ -77,7 +77,7 @@ public class MedicationResourceProvider implements IResourceProvider {
         return new IBundleProvider() {
 
             @Override
-            public int size() {
+            public Integer size() {
                 return size;
             }
 

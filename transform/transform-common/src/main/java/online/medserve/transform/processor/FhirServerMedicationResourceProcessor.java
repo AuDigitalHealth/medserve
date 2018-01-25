@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import org.hl7.fhir.dstu3.model.Bundle;
 import org.hl7.fhir.dstu3.model.Bundle.BundleType;
 import org.hl7.fhir.dstu3.model.Bundle.HTTPVerb;
 import org.hl7.fhir.dstu3.model.Resource;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.IGenericClient;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import online.medserve.transform.util.LoggingTimer;
 
 public class FhirServerMedicationResourceProcessor implements MedicationResourceProcessor {
