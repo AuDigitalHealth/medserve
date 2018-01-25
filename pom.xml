@@ -8,7 +8,7 @@
 	<packaging>pom</packaging>
 	<properties>
 		<hapiVersion>3.2.0</hapiVersion>
-		<dockerfile-maven-version>1.3.6</dockerfile-maven-version>
+		<dockerfile-maven-version>1.3.7</dockerfile-maven-version>
 		<dockerTag>latest</dockerTag>
 	</properties>
 
