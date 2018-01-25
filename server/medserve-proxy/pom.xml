@@ -33,7 +33,7 @@
 				<configuration>
   <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
 					<repository>dionmcm/medserve-proxy</repository>
-					<tag>latest</tag>
+					<tag>${dockerTag}</tag>
 				</configuration>
 			</plugin>
 

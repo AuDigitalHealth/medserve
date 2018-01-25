@@ -142,7 +142,7 @@
 				<configuration>
 					<useMavenSettingsForAuth>true</useMavenSettingsForAuth>
 					<repository>dionmcm/medserve</repository>
-					<tag>latest</tag>
+					<tag>${dockerTag}</tag>
 				</configuration>
 			</plugin>
 			<plugin>

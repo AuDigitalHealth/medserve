@@ -9,6 +9,7 @@
 	<properties>
 		<hapiVersion>3.2.0</hapiVersion>
 		<dockerfile-maven-version>1.3.6</dockerfile-maven-version>
+		<dockerTag>latest</dockerTag>
 	</properties>
 
 	<dependencies>
