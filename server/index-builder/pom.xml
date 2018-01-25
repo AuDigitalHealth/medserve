@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>com.github.dionmcm</groupId>
 			<artifactId>ncts-syndication-client-library</artifactId>
-			<version>0.0.4</version>
+			<version>0.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
