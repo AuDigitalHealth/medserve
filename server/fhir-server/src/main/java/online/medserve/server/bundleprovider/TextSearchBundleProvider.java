@@ -5,13 +5,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import org.hl7.fhir.dstu3.model.BaseResource;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
 
 import ca.uhn.fhir.model.primitive.InstantDt;
 import ca.uhn.fhir.rest.param.StringAndListParam;
-import ca.uhn.fhir.rest.server.IBundleProvider;
 import online.medserve.server.Util;
 import online.medserve.server.index.Index;
 
@@ -58,7 +58,7 @@ public class TextSearchBundleProvider implements IBundleProvider {
     }
 
     @Override
-    public int size() {
+    public Integer size() {
         return size;
     }
 

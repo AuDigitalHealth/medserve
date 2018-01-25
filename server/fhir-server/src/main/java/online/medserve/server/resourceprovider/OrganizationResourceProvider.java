@@ -2,6 +2,8 @@ package online.medserve.server.resourceprovider;
 
 import java.io.IOException;
 
+import ca.uhn.fhir.rest.api.server.IBundleProvider;
+import online.medserve.server.bundleprovider.TextSearchBundleProvider;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Organization;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -13,9 +15,7 @@ import ca.uhn.fhir.rest.annotation.Read;
 import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.param.StringAndListParam;
-import ca.uhn.fhir.rest.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.IResourceProvider;
-import online.medserve.server.bundleprovider.TextSearchBundleProvider;
 import online.medserve.server.index.Index;
 
 public class OrganizationResourceProvider implements IResourceProvider {
