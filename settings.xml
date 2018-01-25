@@ -1,0 +1,9 @@
+<settings>
+  <servers>
+  <server>
+    <id>docker.io</id>
+    <username>${DOCKER_USERNAME}</username>
+    <password>${DOCKER_PASSWORD}</password>
+  </server>
+  </servers>
+</settings>
