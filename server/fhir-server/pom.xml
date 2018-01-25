@@ -14,8 +14,9 @@
 	<name>FHIR Server</name>
 
 	<properties>
-		<amtSnapshot>/Users/dion/terminology/NCTS_SCT_RF2_DISTRIBUTION_32506021000036107-20171231-SNAPSHOT.zip</amtSnapshot>
-		<pbsExtract>/Users/dion/terminology/2018-01-01-extracts-down-converted.zip</pbsExtract>
+		<synd.client.id>${env.SYND_CLIENT_ID}</synd.client.id>
+		<synd.client.secret>${env.SYND_CLIENT_SECRET}</synd.client.secret>
+		<synd.cache.dir>${env.SYND_CACHE_DIR}</synd.cache.dir>
 	</properties>
 
 	<dependencies>
@@ -106,14 +107,15 @@
 				<groupId>online.medserve.server</groupId>
 				<artifactId>index-builder</artifactId>
 				<configuration>
-					<amtSnapshot>${amtSnapshot}</amtSnapshot>
-					<pbsExtract>${pbsExtract}</pbsExtract>
+					<syndCacheDirectory>${synd.cache.dir}</syndCacheDirectory>
+					<clientId>${synd.client.id}</clientId>
+					<clientSecret>${synd.client.secret}</clientSecret>
 				</configuration>
 				<executions>
 					<execution>
 						<id>build index</id>
 						<goals>
-							<goal>indexbuilder</goal>
+							<goal>amt-index-builder</goal>
 						</goals>
 					</execution>
 				</executions>
