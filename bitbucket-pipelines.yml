@@ -10,7 +10,6 @@ pipelines:
     - step:
         caches:
           - maven
-          - terminology
         script:
           - mvn -B package
     
@@ -21,6 +20,7 @@ pipelines:
             - maven
             - terminology
           script:
+            - mkdir -p ~/terminology
             - mvn -s settings.xml -B deploy -Dsynd.cache.dir=~/terminology
 
 definitions:
