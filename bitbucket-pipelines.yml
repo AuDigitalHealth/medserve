@@ -21,7 +21,7 @@ pipelines:
             - maven
             - terminology
           script:
-            - mvn -s settings.xml -B deploy -Dsynd.cache.dir=~/terminology
+            - mvn -B package
 
 definitions:
   caches:
