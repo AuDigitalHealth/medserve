@@ -89,15 +89,6 @@
 		<finalName>med-fhir-server</finalName>
 
 		<plugins>
-			<!-- Tell Maven which Java source version you want to use -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>online.medserve.server</groupId>
 				<artifactId>index-builder</artifactId>
