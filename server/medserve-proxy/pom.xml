@@ -23,15 +23,22 @@
 
 				<executions>
 					<execution>
+						<phase>install</phase>
 						<id>build docker image</id>
 						<goals>
 							<goal>build</goal>
+						</goals>
+					</execution>
+					<execution>
+						<phase>deploy</phase>
+						<id>push docker image</id>
+						<goals>
 							<goal>push</goal>
 						</goals>
 					</execution>
 				</executions>
 				<configuration>
-  <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
+					<useMavenSettingsForAuth>true</useMavenSettingsForAuth>
 					<repository>dionmcm/medserve-proxy</repository>
 					<tag>${dockerTag}</tag>
 				</configuration>
