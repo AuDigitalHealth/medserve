@@ -9,14 +9,7 @@ options:
   docker: true
   size: 2x
   
-pipelines:
-  default:
-    - step:
-        caches:
-          - maven
-        script:
-          - mvn -B package
-    
+pipelines:    
   branches:
     master:
       - step:
@@ -26,6 +19,7 @@ pipelines:
           script:
             - mkdir -p $BITBUCKET_CLONE_DIR/terminology
             - mvn -s settings.xml -B deploy -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
+            - ssh root@medserve.online 'docker-compose pull medserve proxy; docker-compose create medserve proxy;'
           services:
             - docker
 
