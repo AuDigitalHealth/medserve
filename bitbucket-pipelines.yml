@@ -5,6 +5,9 @@
 # You can specify a custom docker image from Docker Hub as your build environment.
 image: maven:3.3.9
 
+options:
+  docker: true
+  
 pipelines:
   default:
     - step:
@@ -22,6 +25,8 @@ pipelines:
           script:
             - mkdir -p $BITBUCKET_CLONE_DIR/terminology
             - mvn -s settings.xml -B deploy -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
+          services:
+            - docker
 
 definitions:
   caches:
