@@ -6,10 +6,23 @@
 image: maven:3.3.9
 
 pipelines:
+  default:
+    - step:
+        caches:
+          - maven
+          - terminology
+        script:
+          - mvn -B package
+    
   branches:
     master:
       - step:
           caches:
             - maven
+            - terminology
           script:
-            - mvn -s settings.xml -B deploy -Dsynd.cache.dir=/root/.m2
+            - mvn -B package
+
+definitions:
+  caches:
+    terminology: ~/terminology
