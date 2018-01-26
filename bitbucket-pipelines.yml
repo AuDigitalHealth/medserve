@@ -20,9 +20,9 @@ pipelines:
             - maven
             - terminology
           script:
-            - mkdir -p ~/terminology
-            - mvn -s settings.xml -B deploy -Dsynd.cache.dir=~/terminology
+            - mkdir -p $BITBUCKET_CLONE_DIR/terminology
+            - mvn -s settings.xml -B deploy -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
 
 definitions:
   caches:
-    terminology: ~/terminology
+    terminology: $BITBUCKET_CLONE_DIR/terminology
