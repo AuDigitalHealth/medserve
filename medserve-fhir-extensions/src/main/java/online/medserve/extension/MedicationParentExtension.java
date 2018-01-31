@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.hl7.fhir.dstu3.model.BackboneElement;
 import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.Enumeration;
+import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
 import org.hl7.fhir.dstu3.model.Reference;
 
 import ca.uhn.fhir.model.api.annotation.Block;
@@ -44,12 +46,22 @@ public class MedicationParentExtension extends BackboneElement implements Parent
     private List<MedicationParentExtension> parentMedicationResources;
 
     /**
+     * Status of the referenced medication
+     */
+    @Child(name = "medicationResourceReferenceStatus", min = 1, max = 1, summary = true)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/medicationResourceReferenceStatus", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Status of the referenced medication")
+    private Enumeration<MedicationStatus> medicationResourceStatus;
+
+    /**
      * It is important to override the isEmpty() method, adding a check for any newly added fields.
      */
     @Override
     public boolean isEmpty() {
         return super.isEmpty()
-                && ElementUtil.isEmpty(parentMedication, medicationResourceType, parentMedicationResources);
+                && ElementUtil.isEmpty(parentMedication, medicationResourceType, parentMedicationResources,
+                    medicationResourceStatus);
     }
 
     public Reference getParentMedication() {
@@ -97,7 +109,16 @@ public class MedicationParentExtension extends BackboneElement implements Parent
         MedicationParentExtension copy = new MedicationParentExtension();
         copy.parentMedication = parentMedication;
         copy.medicationResourceType = medicationResourceType;
+        copy.medicationResourceStatus = medicationResourceStatus;
         return copy;
+    }
+
+    public Enumeration<MedicationStatus> getMedicationResourceStatus() {
+        return medicationResourceStatus;
+    }
+
+    public void setMedicationResourceStatus(Enumeration<MedicationStatus> medicationResourceStatus) {
+        this.medicationResourceStatus = medicationResourceStatus;
     }
 
 }

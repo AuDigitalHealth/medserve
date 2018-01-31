@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.Enumeration;
+import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
 import org.hl7.fhir.dstu3.model.Reference;
 
 import ca.uhn.fhir.model.api.annotation.Child;
@@ -34,13 +36,24 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     @Description(shortDefinition = "A code that indicates what level of abstraction the medication represents")
     private Coding medicationResourceType;
 
+    /**
+     * Status of the referenced medication
+     */
+    @Child(name = "medicationResourceReferenceStatus", min = 1, max = 1, summary = true)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/medicationResourceReferenceStatus", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Status of the referenced medication")
+    private Enumeration<MedicationStatus> medicationResourceStatus;
+
+    public ExtendedReference() {}
+
     public ExtendedReference(String theReference) {
         super(theReference);
     }
 
     @Override
     public boolean isEmpty() {
-        return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType);
+        return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, medicationResourceStatus);
     }
 
     @Override
@@ -71,4 +84,13 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     public void setMedicationResourceType(Coding medicationResourceType) {
         this.medicationResourceType = medicationResourceType;
     }
+
+    public Enumeration<MedicationStatus> getMedicationResourceStatus() {
+        return medicationResourceStatus;
+    }
+
+    public void setMedicationResourceStatus(Enumeration<MedicationStatus> medicationResourceStatus) {
+        this.medicationResourceStatus = medicationResourceStatus;
+    }
+
 }
