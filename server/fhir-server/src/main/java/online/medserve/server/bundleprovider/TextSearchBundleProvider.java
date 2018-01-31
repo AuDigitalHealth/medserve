@@ -11,6 +11,7 @@ import org.hl7.fhir.instance.model.api.IPrimitiveType;
 
 import ca.uhn.fhir.model.primitive.InstantDt;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
+import ca.uhn.fhir.rest.param.DateAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import online.medserve.server.Util;
@@ -24,17 +25,19 @@ public class TextSearchBundleProvider implements IBundleProvider {
     private Class<? extends BaseResource> clazz;
     private int size;
     private StringOrListParam status;
+    private DateAndListParam lastModified;
 
     public TextSearchBundleProvider(Class<? extends BaseResource> clazz, Index index, StringAndListParam text,
-            StringOrListParam status, Integer pageSize) throws IOException {
+            StringOrListParam status, DateAndListParam lastModified, Integer pageSize) throws IOException {
         searchTime = InstantDt.withCurrentTime();
         this.clazz = clazz;
         this.index = index;
         this.text = text;
         this.status = status;
+        this.lastModified = lastModified;
         this.pageSize = Util.getCount(pageSize);
         
-        this.size = index.getResourcesByTextSize(clazz, text, status);
+        this.size = index.getResourcesByTextSize(clazz, text, status, lastModified);
     }
 
     @Override
@@ -47,7 +50,7 @@ public class TextSearchBundleProvider implements IBundleProvider {
         if (theFromIndex >= size) {
             return Collections.emptyList();
         }
-        return index.getResourcesByText(clazz, text, status, theFromIndex, theToIndex);
+        return index.getResourcesByText(clazz, text, status, lastModified, theFromIndex, theToIndex);
     }
 
     @Override

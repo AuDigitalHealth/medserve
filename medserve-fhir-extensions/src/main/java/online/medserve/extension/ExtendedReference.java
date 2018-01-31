@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.DateType;
 import org.hl7.fhir.dstu3.model.Enumeration;
 import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
 import org.hl7.fhir.dstu3.model.Reference;
@@ -39,11 +40,22 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     /**
      * Status of the referenced medication
      */
-    @Child(name = "medicationResourceStatus", min = 1, max = 1, summary = true)
+    @Child(name = "medicationResourceReferenceStatus", min = 1, max = 1, summary = true)
     @Extension(url = PROFILE_URL_BASE
-            + "StructureDefinition/medicationResourceStatus", definedLocally = false, isModifier = false)
+            + "StructureDefinition/medicationResourceReferenceStatus", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "Status of the referenced medication")
     private Enumeration<MedicationStatus> medicationResourceStatus;
+
+    /**
+     * The date the underlying definition of the concept or its descriptions were last changed.
+     */
+    @Child(name = "lastModified", min = 1, max = 1, summary = false)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/lastModified", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "The date the underlying definition of the concept or its descriptions were last changed.")
+    private DateType lastModified;
+
+    public ExtendedReference() {}
 
     public ExtendedReference(String theReference) {
         super(theReference);
@@ -51,8 +63,7 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
 
     @Override
     public boolean isEmpty() {
-        return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType)
-                && ElementUtil.isEmpty(parentMedicationResources); // && ElementUtil.isEmpty(medicationResourceStatus);
+        return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, medicationResourceStatus, lastModified);
     }
 
     @Override
@@ -91,4 +102,16 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     public void setMedicationResourceStatus(Enumeration<MedicationStatus> medicationResourceStatus) {
         this.medicationResourceStatus = medicationResourceStatus;
     }
+
+    public DateType getLastModified() {
+        if (lastModified == null) {
+            lastModified = new DateType();
+        }
+        return lastModified;
+    }
+
+    public void setLastModified(DateType lastModified) {
+        this.lastModified = lastModified;
+    }
+
 }

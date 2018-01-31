@@ -36,7 +36,6 @@ import org.hl7.fhir.dstu3.model.Reference;
 import org.hl7.fhir.dstu3.model.Resource;
 import org.hl7.fhir.dstu3.model.SimpleQuantity;
 import org.hl7.fhir.dstu3.model.StringType;
-import org.hl7.fhir.dstu3.model.Substance;
 import org.hl7.fhir.dstu3.model.Substance.FHIRSubstanceStatus;
 import org.hl7.fhir.dstu3.model.UriType;
 
@@ -44,6 +43,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.validation.FhirValidator;
 import online.medserve.extension.ExtendedMedication;
 import online.medserve.extension.ExtendedReference;
+import online.medserve.extension.ExtendedSubstance;
 import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.MedicationSourceExtension;
@@ -114,12 +114,15 @@ public class AmtMedicationResourceGenerator {
         Reference reference = toReference(concept, "Substance");
         if (!processedConcepts.contains(Long.toString(concept.getId()))) {
             processedConcepts.add(Long.toString(concept.getId()));
-            Substance substance = new Substance();
+            ExtendedSubstance substance = new ExtendedSubstance();
             setStandardResourceElements(concept, substance);
 
             substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
 
             substance.setCode(concept.toCodeableConcept());
+            substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
+            substance.setLastModified(new DateType(concept.getLastModified()));
+
             concept.getMultipleDestinations(AttributeType.IS_MODIFICATION_OF)
                 .forEach(m -> substance.addIngredient().setSubstance(createSubstanceResource(m, createdResources)));
             createdResources.add(substance);
@@ -201,16 +204,11 @@ public class AmtMedicationResourceGenerator {
             .forEach(parent -> {
                 if (!parent.hasParent(AmtConcept.TP)) {
                     MedicationParentExtension extension = new MedicationParentExtension();
-
-                    ExtendedReference reference =
-                            new ExtendedReference("Medication/" + concept.getId());
-                    reference.setDisplay(concept.getPreferredTerm());
-                    reference.setMedicationResourceType(concept.getMedicationType().getCode());
-                    reference.setMedicationResourceStatus(
-                        new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
-
-                    extension.setParentMedication(reference);
+                    extension.setParentMedication(toReference(parent, "Medication"));
                     extension.setMedicationResourceType(parent.getMedicationType().getCode());
+                    extension.setMedicationResourceStatus(
+                        new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), parent.getStatus()));
+                    extension.setLastModified(new DateType(parent.getLastModified()));
 
                     addedConcepts.add(parent.getId());
                     addParentExtensions(parent, extension, addedConcepts, createdResources);
@@ -375,18 +373,12 @@ public class AmtMedicationResourceGenerator {
                 && relationship.getSource().hasParent(AmtConcept.TPP)) {
             Collection<Long> ctpp = conceptCache.getDescendantOf(relationship.getSource().getId());
 
-            // if (ctpp.size() != 1) {
-            // throw new RuntimeException("More than one ctpp found for "
-            // + relationship.getSource().toConceptReference()
-            // + " ctpps were " + StringUtils.join(ctpp, "'"));
-            // }
-
             Set<Concept> destinationSet =
                     ctpp.stream()
                         .flatMap(c -> conceptCache.getConcept(c).getRelationships(relationship.getType()).stream())
-                .flatMap(r -> r.getDestination().getParents().values().stream())
-                .filter(c -> c.hasParent(relationship.getDestination()))
-                .collect(Collectors.toSet());
+                        .flatMap(r -> r.getDestination().getParents().values().stream())
+                        .filter(c -> c.hasParent(relationship.getDestination()))
+                        .collect(Collectors.toSet());
 
             if (destinationSet.size() != 1) {
                 throw new RuntimeException("Destination set was expected to be 1 but was " + destinationSet);
@@ -489,6 +481,8 @@ public class AmtMedicationResourceGenerator {
         reference.setMedicationResourceType(concept.getMedicationType().getCode());
         reference.setMedicationResourceStatus(
             new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
+        reference.setLastModified(new DateType(concept.getLastModified()));
+
         return reference;
     }
 }

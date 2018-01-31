@@ -15,6 +15,7 @@ import ca.uhn.fhir.rest.annotation.Read;
 import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
+import ca.uhn.fhir.rest.param.DateAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenParam;
@@ -22,6 +23,7 @@ import ca.uhn.fhir.rest.server.IResourceProvider;
 import online.medserve.server.bundleprovider.CodeSearchBundleProvider;
 import online.medserve.server.bundleprovider.TextSearchBundleProvider;
 import online.medserve.server.index.Index;
+import online.medserve.server.indexbuilder.constants.FieldNames;
 
 public class SubstanceResourceProvider implements IResourceProvider {
     private Index index;
@@ -49,10 +51,11 @@ public class SubstanceResourceProvider implements IResourceProvider {
 
     @Search(type = Substance.class)
     public IBundleProvider searchByText(
-            @RequiredParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
+            @OptionalParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
             @OptionalParam(name = Substance.SP_STATUS) @Description(shortDefinition = "Status of the substance, active, inactive (meaning no longer available) or entered-in-error") StringOrListParam status,
+            @OptionalParam(name = FieldNames.LAST_MODIFIED) @Description(shortDefinition = "Date the underlying code system's content for this substance was last modified") DateAndListParam lastModified,
             @Count Integer theCount) throws IOException {
 
-        return new TextSearchBundleProvider(Substance.class, index, text, status, theCount);
+        return new TextSearchBundleProvider(Substance.class, index, text, status, lastModified, theCount);
     }
 }

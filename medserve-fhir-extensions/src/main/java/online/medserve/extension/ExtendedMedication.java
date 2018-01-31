@@ -74,7 +74,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     @Override
     public boolean isEmpty() {
         return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, parentMedicationResources, brand,
-            sourceCodeSystem, subsidies);
+            sourceCodeSystem, subsidies, lastModified);
     }
 
     @Override

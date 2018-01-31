@@ -40,6 +40,6 @@ public class OrganizationResourceProvider implements IResourceProvider {
             @RequiredParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
             @Count Integer theCount) throws IOException {
 
-        return new TextSearchBundleProvider(Organization.class, index, text, null, theCount);
+        return new TextSearchBundleProvider(Organization.class, index, text, null, null, theCount);
     }
 }

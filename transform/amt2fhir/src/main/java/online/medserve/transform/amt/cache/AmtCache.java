@@ -64,7 +64,6 @@ public class AmtCache {
     private Map<String, String> atcCodes = new HashMap<>();
     private Map<String, String> caution = new HashMap<>();
     private Map<String, String> notes = new HashMap<>();
-
     private Map<Long, Date> relationshipDateCache = new HashMap<>();
 
     public AmtCache(FileSystem amtZip, FileSystem pbsExtract) throws IOException {
@@ -411,6 +410,7 @@ public class AmtCache {
         long conceptId = Long.parseLong(row[5]);
         Concept concept = conceptCache.get(conceptId);
         if ((isActive(row) || !concept.isActive()) && isAmtModule(row)) {
+
             Set<String> artgIds = artgIdCache.get(conceptId);
             if (artgIds == null) {
                 artgIds = new HashSet<>();

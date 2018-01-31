@@ -59,5 +59,4 @@ public class Relationship {
     public Date getEffectiveTime() {
         return effectiveTime;
     }
-
 }

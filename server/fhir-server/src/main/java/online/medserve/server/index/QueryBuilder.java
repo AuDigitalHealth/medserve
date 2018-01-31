@@ -92,17 +92,17 @@ public final class QueryBuilder {
                         case GREATERTHAN:
                         case STARTS_AFTER:
                             subAndQuery.add(
-                                TermRangeQuery.newStringRange(fieldName, date.getValueAsString(), "*", false, true),
+                                TermRangeQuery.newStringRange(fieldName, date.getValueAsString(), null, false, true),
                                 Occur.SHOULD);
                             break;
                         case GREATERTHAN_OR_EQUALS:
                             subAndQuery.add(
-                                TermRangeQuery.newStringRange(fieldName, date.getValueAsString(), "*", true, true),
+                                TermRangeQuery.newStringRange(fieldName, date.getValueAsString(), null, true, true),
                                 Occur.SHOULD);
                             break;
                         case LESSTHAN_OR_EQUALS:
                             subAndQuery.add(
-                                TermRangeQuery.newStringRange(fieldName, "*", date.getValueAsString(), true, true),
+                                TermRangeQuery.newStringRange(fieldName, null, date.getValueAsString(), true, true),
                                 Occur.SHOULD);
                             break;
                         case NOT_EQUAL:
@@ -153,51 +153,8 @@ public final class QueryBuilder {
         }
     }
 
-    // public <T extends BaseResource> List<T> getResources(Class<T> clazz, StringAndListParam text, int count) {
-    // Builder builder = createTextSearchBuilder(clazz, text);
-    // return getResources(clazz, count, builder.build());
-    // }
-
-    // public <T extends BaseResource> List<T> getResources(Class<T> clazz, StringAndListParam text,
-    // TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
-    // TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
-    // TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer, TokenAndListParam subsidyCode,
-    // int count) {
-    //
-    // Builder builder = createTextSearchBuilder(clazz, text);
-    //
-    // addOptionalReferenceAndList(parent, builder, FieldNames.PARENT, ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalStringOrList(medicationResourceType, builder, FieldNames.MEDICATION_RESOURCE_TYPE);
-    //
-    // addOptionalCodableConceptAndList(form, builder, FieldNames.FORM);
-    //
-    // addOptionalReferenceAndList(ingredient, builder, FieldNames.INGREDIENT,
-    // ResourceTypes.SUBSTANCE_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalCodableConceptAndList(container, builder, FieldNames.CONTAINER);
-    //
-    // addOptionalReferenceAndList(packageItem, builder, FieldNames.PACKAGE_ITEM,
-    // ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalCodableConceptAndList(brand, builder, FieldNames.BRAND);
-    //
-    // addOptionalReferenceAndList(manufacturer, builder, FieldNames.MANUFACTURER,
-    // ResourceTypes.ORGANIZATION_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalCodableConceptAndList(subsidyCode, builder, FieldNames.SUBSIDY_CODE);
-    //
-    // if (isBrand != null) {
-    // builder.add(new TermQuery(new Term(FieldNames.IS_BRAND, "" + Boolean.parseBoolean(isBrand))),
-    // Occur.MUST);
-    // }
-    //
-    // return getResources(clazz, count, builder.build());
-    //
-    // }
-
     public static <T extends BaseResource> Builder createTextSearchBuilder(Class<T> clazz, StringAndListParam text,
-            StringOrListParam status) {
+            StringOrListParam status, DateAndListParam lastModified) {
         String resourceType = clazz.getSimpleName().replace("Extended", "").toLowerCase();
         Builder builder = new BooleanQuery.Builder()
             .add(new TermQuery(new Term(FieldNames.RESOURCE_TYPE, resourceType)), Occur.FILTER);
@@ -222,6 +179,13 @@ public final class QueryBuilder {
             }
         }
 
+        addOptionalDateAndList(lastModified, builder, FieldNames.LAST_MODIFIED);
+
+        if (status == null || status.getValuesAsQueryTokens().size() == 0) {
+            status = new StringOrListParam();
+            status.add(new StringParam("active"));
+        }
+
         QueryBuilder.addOptionalStringOrList(status, builder, FieldNames.STATUS);
 
         return builder;
@@ -243,49 +207,6 @@ public final class QueryBuilder {
                 "Modifier " + code.getModifier().getValue() + " is not yet supported ...sorry");
         }
     }
-
-    // public <T extends BaseResource> List<T> getResources(Class<T> clazz, StringAndListParam text, int count) {
-    // Builder builder = createTextSearchBuilder(clazz, text);
-    // return getResources(clazz, count, builder.build());
-    // }
-
-    // public <T extends BaseResource> List<T> getResources(Class<T> clazz, StringAndListParam text,
-    // TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
-    // TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
-    // TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer, TokenAndListParam subsidyCode,
-    // int count) {
-    //
-    // Builder builder = createTextSearchBuilder(clazz, text);
-    //
-    // addOptionalReferenceAndList(parent, builder, FieldNames.PARENT, ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalStringOrList(medicationResourceType, builder, FieldNames.MEDICATION_RESOURCE_TYPE);
-    //
-    // addOptionalCodableConceptAndList(form, builder, FieldNames.FORM);
-    //
-    // addOptionalReferenceAndList(ingredient, builder, FieldNames.INGREDIENT,
-    // ResourceTypes.SUBSTANCE_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalCodableConceptAndList(container, builder, FieldNames.CONTAINER);
-    //
-    // addOptionalReferenceAndList(packageItem, builder, FieldNames.PACKAGE_ITEM,
-    // ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalCodableConceptAndList(brand, builder, FieldNames.BRAND);
-    //
-    // addOptionalReferenceAndList(manufacturer, builder, FieldNames.MANUFACTURER,
-    // ResourceTypes.ORGANIZATION_RESOURCE_TYPE_VALUE);
-    //
-    // addOptionalCodableConceptAndList(subsidyCode, builder, FieldNames.SUBSIDY_CODE);
-    //
-    // if (isBrand != null) {
-    // builder.add(new TermQuery(new Term(FieldNames.IS_BRAND, "" + Boolean.parseBoolean(isBrand))),
-    // Occur.MUST);
-    // }
-    //
-    // return getResources(clazz, count, builder.build());
-    //
-    // }
 
     public static void searchReference(TokenParam reference, Builder builder, String fieldName, String type,
             Occur occur) {
