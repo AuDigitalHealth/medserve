@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.DateType;
 import org.hl7.fhir.dstu3.model.Medication;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
@@ -61,6 +62,14 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     @Extension(url = PROFILE_URL_BASE + "StructureDefinition/subsidy", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "An extension which captures subsidy coding and associated information for this Medication ")
     private List<SubsidyExtension> subsidies;
+
+    /**
+     * The date the underlying definition of the concept or its descriptions were last changed.
+     */
+    @Child(name = "lastModified", min = 1, max = 1, summary = false)
+    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/lastModified", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "The date the underlying definition of the concept or its descriptions were last changed.")
+    private DateType lastModified;
 
     @Override
     public boolean isEmpty() {
@@ -122,6 +131,17 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
 
     public void setSourceCodeSystem(MedicationSourceExtension sourceCodeSystem) {
         this.sourceCodeSystem = sourceCodeSystem;
+    }
+
+    public DateType getLastModified() {
+        if (lastModified == null) {
+            lastModified = new DateType();
+        }
+        return lastModified;
+    }
+
+    public void setLastModified(DateType lastModified) {
+        this.lastModified = lastModified;
     }
 
 }

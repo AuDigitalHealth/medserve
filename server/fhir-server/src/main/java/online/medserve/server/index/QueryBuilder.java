@@ -9,8 +9,13 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BooleanQuery.Builder;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
 import org.hl7.fhir.dstu3.model.BaseResource;
 
+import ca.uhn.fhir.rest.param.DateAndListParam;
+import ca.uhn.fhir.rest.param.DateOrListParam;
+import ca.uhn.fhir.rest.param.DateParam;
+import ca.uhn.fhir.rest.param.ParamPrefixEnum;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.StringParam;
@@ -30,7 +35,7 @@ public final class QueryBuilder {
     public static void addCodesearch(TokenParam code, Builder builder, String fieldName, Occur occur) {
         String system = code.getSystem();
         String codeValue = code.getValue();
-    
+
         if (system != null && !system.isEmpty()) {
             builder.add(new TermQuery(new Term(fieldName, codeValue + "|" + system)), occur);
         } else {
@@ -63,6 +68,57 @@ public final class QueryBuilder {
         }
     }
 
+    public static void addOptionalDateAndList(DateAndListParam lastModified, Builder builder, String fieldName) {
+        if (lastModified != null) {
+            List<DateOrListParam> dateQueries = lastModified.getValuesAsQueryTokens();
+            for (DateOrListParam dateQuery : dateQueries) {
+                Builder subAndQuery = new BooleanQuery.Builder();
+                List<DateParam> queryTokens = dateQuery.getValuesAsQueryTokens();
+                // Only return results that match at least one of the tokens in the list below
+                for (DateParam date : queryTokens) {
+                    ParamPrefixEnum prefix = date.getPrefix() == null ? ParamPrefixEnum.EQUAL : date.getPrefix();
+                    switch (prefix) {
+                        case APPROXIMATE:
+                            throw new NotImplementedOperationException("Approximate for date searches not implemented");
+                        case ENDS_BEFORE:
+                        case LESSTHAN:
+                            subAndQuery.add(
+                                TermRangeQuery.newStringRange(fieldName, "*", date.getValueAsString(), true, false),
+                                Occur.SHOULD);
+                            break;
+                        case EQUAL:
+                            subAndQuery.add(new TermQuery(new Term(fieldName, date.getValueAsString())), Occur.SHOULD);
+                            break;
+                        case GREATERTHAN:
+                        case STARTS_AFTER:
+                            subAndQuery.add(
+                                TermRangeQuery.newStringRange(fieldName, date.getValueAsString(), "*", false, true),
+                                Occur.SHOULD);
+                            break;
+                        case GREATERTHAN_OR_EQUALS:
+                            subAndQuery.add(
+                                TermRangeQuery.newStringRange(fieldName, date.getValueAsString(), "*", true, true),
+                                Occur.SHOULD);
+                            break;
+                        case LESSTHAN_OR_EQUALS:
+                            subAndQuery.add(
+                                TermRangeQuery.newStringRange(fieldName, "*", date.getValueAsString(), true, true),
+                                Occur.SHOULD);
+                            break;
+                        case NOT_EQUAL:
+                            subAndQuery.add(new TermQuery(new Term(fieldName, date.getValueAsString())),
+                                Occur.MUST_NOT);
+                            break;
+                        default:
+                            throw new RuntimeException("Unknown DateParam prefix " + date.getPrefix());
+                    }
+
+                }
+                builder.add(subAndQuery.build(), Occur.MUST);
+            }
+        }
+    }
+
     public static void addOptionalReferenceAndList(TokenAndListParam reference, Builder builder, String fieldName,
             String type) {
         if (reference != null) {
@@ -87,7 +143,7 @@ public final class QueryBuilder {
         if (param != null) {
             List<StringParam> queryTokens = param.getValuesAsQueryTokens();
             // Only return results that match at least one of the tokens in the list below
-    
+
             Builder subAndQuery = new BooleanQuery.Builder();
             for (StringParam nextString : queryTokens) {
                 subAndQuery.add(new TermQuery(new Term(fieldName, nextString.getValue())),
@@ -101,7 +157,7 @@ public final class QueryBuilder {
     // Builder builder = createTextSearchBuilder(clazz, text);
     // return getResources(clazz, count, builder.build());
     // }
-    
+
     // public <T extends BaseResource> List<T> getResources(Class<T> clazz, StringAndListParam text,
     // TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
     // TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
@@ -139,15 +195,16 @@ public final class QueryBuilder {
     // return getResources(clazz, count, builder.build());
     //
     // }
-    
-    public static <T extends BaseResource> Builder createTextSearchBuilder(Class<T> clazz, StringAndListParam text) {
+
+    public static <T extends BaseResource> Builder createTextSearchBuilder(Class<T> clazz, StringAndListParam text,
+            StringOrListParam status) {
         String resourceType = clazz.getSimpleName().replace("Extended", "").toLowerCase();
         Builder builder = new BooleanQuery.Builder()
             .add(new TermQuery(new Term(FieldNames.RESOURCE_TYPE, resourceType)), Occur.FILTER);
-    
+
         if (text != null) {
             List<StringOrListParam> queries = text.getValuesAsQueryTokens();
-    
+
             for (StringOrListParam query : queries) {
                 Builder subAndQuery = new BooleanQuery.Builder();
                 List<StringParam> queryTokens = query.getValuesAsQueryTokens();
@@ -158,12 +215,15 @@ public final class QueryBuilder {
                         .forEach(
                             s -> subAndQuery2.add(new PrefixQuery(new Term(FieldNames.DISPLAY, s.toLowerCase())),
                                 Occur.MUST));
-    
+
                     subAndQuery.add(subAndQuery2.build(), Occur.SHOULD);
                 }
                 builder.add(subAndQuery.build(), Occur.MUST);
             }
         }
+
+        QueryBuilder.addOptionalStringOrList(status, builder, FieldNames.STATUS);
+
         return builder;
     }
 
@@ -188,7 +248,7 @@ public final class QueryBuilder {
     // Builder builder = createTextSearchBuilder(clazz, text);
     // return getResources(clazz, count, builder.build());
     // }
-    
+
     // public <T extends BaseResource> List<T> getResources(Class<T> clazz, StringAndListParam text,
     // TokenAndListParam parent, StringOrListParam medicationResourceType, TokenAndListParam form,
     // TokenAndListParam container, TokenAndListParam ingredient, TokenAndListParam packageItem,
@@ -226,7 +286,7 @@ public final class QueryBuilder {
     // return getResources(clazz, count, builder.build());
     //
     // }
-    
+
     public static void searchReference(TokenParam reference, Builder builder, String fieldName, String type,
             Occur occur) {
         if (reference.getModifier() == null || reference.getModifier().equals(TokenParamModifier.NOT)) {
@@ -240,4 +300,5 @@ public final class QueryBuilder {
                 "Modifier " + reference.getModifier().getValue() + " is not yet supported ...sorry");
         }
     }
+
 }

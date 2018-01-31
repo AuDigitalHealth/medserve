@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -97,7 +98,7 @@ public class Amt2FlatFile {
                             mps.addAll(getParents(AmtConcept.MP, AmtConcept.MPUU, Collections.singletonList(mpuu)));
                         }
 
-                        mps.remove(new Concept(21220011000036103L, true));
+                        mps.remove(new Concept(21220011000036103L, true, new Date()));
 
                         // if (mps.size() > 1) {
                         // addToCsv(writer, mps.size() > 1, mpps.size() > 1, ctpp, tpp, mpp, null);

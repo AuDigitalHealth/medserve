@@ -13,18 +13,20 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hl7.fhir.dstu3.model.Annotation;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.ContactPoint;
+import org.hl7.fhir.dstu3.model.DateType;
 import org.hl7.fhir.dstu3.model.DecimalType;
 import org.hl7.fhir.dstu3.model.DomainResource;
+import org.hl7.fhir.dstu3.model.Enumeration;
 import org.hl7.fhir.dstu3.model.Medication;
 import org.hl7.fhir.dstu3.model.Medication.MedicationPackageComponent;
 import org.hl7.fhir.dstu3.model.Medication.MedicationPackageContentComponent;
 import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
+import org.hl7.fhir.dstu3.model.Medication.MedicationStatusEnumFactory;
 import org.hl7.fhir.dstu3.model.Narrative;
 import org.hl7.fhir.dstu3.model.Narrative.NarrativeStatus;
 import org.hl7.fhir.dstu3.model.Organization;
@@ -35,6 +37,7 @@ import org.hl7.fhir.dstu3.model.Resource;
 import org.hl7.fhir.dstu3.model.SimpleQuantity;
 import org.hl7.fhir.dstu3.model.StringType;
 import org.hl7.fhir.dstu3.model.Substance;
+import org.hl7.fhir.dstu3.model.Substance.FHIRSubstanceStatus;
 import org.hl7.fhir.dstu3.model.UriType;
 
 import ca.uhn.fhir.context.FhirContext;
@@ -114,6 +117,8 @@ public class AmtMedicationResourceGenerator {
             Substance substance = new Substance();
             setStandardResourceElements(concept, substance);
 
+            substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
+
             substance.setCode(concept.toCodeableConcept());
             concept.getMultipleDestinations(AttributeType.IS_MODIFICATION_OF)
                 .forEach(m -> substance.addIngredient().setSubstance(createSubstanceResource(m, createdResources)));
@@ -130,7 +135,11 @@ public class AmtMedicationResourceGenerator {
                 new StringType(amtVersion)));
         setStandardResourceElements(concept, medication);
 
+        medication.setLastModified(new DateType(concept.getLastModified()));
+
         medication.setCode(concept.toCodeableConcept());
+
+        medication.setStatus(concept.getStatus());
 
         medication.setMedicationResourceType(concept.getMedicationType().getCode());
 
@@ -192,7 +201,15 @@ public class AmtMedicationResourceGenerator {
             .forEach(parent -> {
                 if (!parent.hasParent(AmtConcept.TP)) {
                     MedicationParentExtension extension = new MedicationParentExtension();
-                    extension.setParentMedication(toReference(parent, "Medication"));
+
+                    ExtendedReference reference =
+                            new ExtendedReference("Medication/" + concept.getId());
+                    reference.setDisplay(concept.getPreferredTerm());
+                    reference.setMedicationResourceType(concept.getMedicationType().getCode());
+                    reference.setMedicationResourceStatus(
+                        new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
+
+                    extension.setParentMedication(reference);
                     extension.setMedicationResourceType(parent.getMedicationType().getCode());
 
                     addedConcepts.add(parent.getId());
@@ -357,15 +374,16 @@ public class AmtMedicationResourceGenerator {
                 || relationship.getType().equals(AttributeType.HAS_COMPONENT_PACK))
                 && relationship.getSource().hasParent(AmtConcept.TPP)) {
             Collection<Long> ctpp = conceptCache.getDescendantOf(relationship.getSource().getId());
-            if (ctpp.size() != 1) {
-                throw new RuntimeException("More than one ctpp found for "
-                        + relationship.getSource().toConceptReference()
-                        + " ctpps were " + StringUtils.join(ctpp, "'"));
-            }
 
-            Set<Concept> destinationSet = conceptCache.getConcept(ctpp.iterator().next())
-                .getRelationships(relationship.getType())
-                .stream()
+            // if (ctpp.size() != 1) {
+            // throw new RuntimeException("More than one ctpp found for "
+            // + relationship.getSource().toConceptReference()
+            // + " ctpps were " + StringUtils.join(ctpp, "'"));
+            // }
+
+            Set<Concept> destinationSet =
+                    ctpp.stream()
+                        .flatMap(c -> conceptCache.getConcept(c).getRelationships(relationship.getType()).stream())
                 .flatMap(r -> r.getDestination().getParents().values().stream())
                 .filter(c -> c.hasParent(relationship.getDestination()))
                 .collect(Collectors.toSet());
@@ -469,6 +487,8 @@ public class AmtMedicationResourceGenerator {
         reference.setDisplay(concept.getPreferredTerm());
         addParentExtensions(concept, reference, new HashSet<>(), createdResources);
         reference.setMedicationResourceType(concept.getMedicationType().getCode());
+        reference.setMedicationResourceStatus(
+            new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
         return reference;
     }
 }

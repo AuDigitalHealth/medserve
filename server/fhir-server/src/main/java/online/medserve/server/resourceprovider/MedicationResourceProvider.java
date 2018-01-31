@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Medication;
+import org.hl7.fhir.dstu3.model.Substance;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import ca.uhn.fhir.model.api.annotation.Description;
@@ -18,6 +18,8 @@ import ca.uhn.fhir.rest.annotation.OptionalParam;
 import ca.uhn.fhir.rest.annotation.Read;
 import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
+import ca.uhn.fhir.rest.api.server.IBundleProvider;
+import ca.uhn.fhir.rest.param.DateAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
@@ -68,11 +70,13 @@ public class MedicationResourceProvider implements IResourceProvider {
             @OptionalParam(name = FieldNames.IS_BRAND) @Description(shortDefinition = "Filter true/false on whether to match branded or unbranded (generic) resources") String isBrand,
             @OptionalParam(name = FieldNames.MANUFACTURER) @Description(shortDefinition = "Search for resources with the specified manufacturer") TokenAndListParam manufacturer,
             @OptionalParam(name = FieldNames.SUBSIDY_CODE) @Description(shortDefinition = "Search for resources with the specified subsidy code") TokenAndListParam subsidyCode,
+            @OptionalParam(name = Substance.SP_STATUS) @Description(shortDefinition = "Status of the medication, active, inactive (meaning no longer available) or entered-in-error") StringOrListParam status,
+            @OptionalParam(name = FieldNames.LAST_MODIFIED) @Description(shortDefinition = "Date the underlying code system's content for this medication was last modified") DateAndListParam lastModified,
             @Count Integer theCount) throws IOException {
         final InstantDt searchTime = InstantDt.withCurrentTime();
         final int size = index.getMedicationsByParametersSize(ExtendedMedication.class, text, parent, ancestor,
             medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
-            subsidyCode);
+            subsidyCode, status, lastModified);
 
         return new IBundleProvider() {
 
@@ -88,7 +92,7 @@ public class MedicationResourceProvider implements IResourceProvider {
                 }
                 return index.getMedicationsByParameters(ExtendedMedication.class, text, parent, ancestor,
                     medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
-                    subsidyCode, theFromIndex, theToIndex);
+                    subsidyCode, status, lastModified, theFromIndex, theToIndex);
             }
 
             @Override
