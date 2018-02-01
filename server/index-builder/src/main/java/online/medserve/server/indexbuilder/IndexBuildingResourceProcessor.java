@@ -7,11 +7,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -132,6 +134,7 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
                     throw new RuntimeException("Cannot get reference for ingredient " + ingredient);
                 }
             }
+            document.add(new IntPoint(FieldNames.INGREDIENT_COUNT, medication.getIngredient().size()));
         }
 
         if (medication.getPackage() != null) {
@@ -139,6 +142,7 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
                 indexCodeableConcept(document, medication.getPackage().getContainer(), FieldNames.CONTAINER);
             }
             if (medication.getPackage().getContent() != null && !medication.getPackage().getContent().isEmpty()) {
+                Set<String> distinctIngredientSet = new HashSet<>();
                 for (MedicationPackageContentComponent content : medication.getPackage().getContent()) {
                     try {
                         indexReference(document, content.getItemReference(), FieldNames.PACKAGE_ITEM,
@@ -148,8 +152,13 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
                         formCache.put(resource.getId(), formCache.get(getIdFromReference(content.getItemReference(),
                             ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE)));
 
-                        for (Reference ingredientReference : ingredientCache.get(getIdFromReference(content.getItemReference(),
-                            ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE))) {
+                        Set<Reference> ingredientSet =
+                                ingredientCache.get(getIdFromReference(content.getItemReference(),
+                                    ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE));
+                        distinctIngredientSet
+                            .addAll(ingredientSet.stream().map(r -> r.getId()).collect(Collectors.toSet()));
+
+                        for (Reference ingredientReference : ingredientSet) {
                             indexReference(document, ingredientReference, FieldNames.INGREDIENT,
                                 ResourceTypes.SUBSTANCE_RESOURCE_TYPE_VALUE);
 
@@ -160,6 +169,8 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
                         throw new RuntimeException("Cannot get reference for package-item " + content);
                     }
                 }
+
+                document.add(new IntPoint(FieldNames.INGREDIENT_COUNT, distinctIngredientSet.size()));
             }
         }
 

@@ -20,6 +20,7 @@ import org.hl7.fhir.dstu3.model.BaseResource;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import ca.uhn.fhir.rest.param.DateAndListParam;
+import ca.uhn.fhir.rest.param.NumberAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
@@ -87,10 +88,12 @@ public class Index {
             TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
             TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
             TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
-            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified)
+            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified,
+            NumberAndListParam ingredientCount)
             throws IOException {
         Query query = getMedicationsByParametersQuery(clazz, text, parent, ancestor, medicationResourceType, form,
-            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, status, lastModified);
+            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, status, lastModified,
+            ingredientCount);
         return searcher.count(query);
     }
 
@@ -98,11 +101,13 @@ public class Index {
             TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
             TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
             TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
-            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified, int theFromIndex,
+            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified,
+            NumberAndListParam ingredientCount, int theFromIndex,
             int theToIndex) {
 
         Query query = getMedicationsByParametersQuery(clazz, text, parent, ancestor, medicationResourceType, form,
-            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, status, lastModified);
+            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, status, lastModified,
+            ingredientCount);
 
         return getResources(clazz, theFromIndex, theToIndex, query);
     }
@@ -111,8 +116,11 @@ public class Index {
             TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
             TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
             TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
-            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified) {
+            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified,
+            NumberAndListParam ingredientCount) {
         Builder builder = QueryBuilder.createTextSearchBuilder(clazz, text, status, lastModified);
+
+        QueryBuilder.addOptionalNumberAndList(ingredientCount, builder, FieldNames.INGREDIENT_COUNT);
 
         QueryBuilder.addOptionalReferenceAndList(parent, builder, FieldNames.PARENT,
             ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);

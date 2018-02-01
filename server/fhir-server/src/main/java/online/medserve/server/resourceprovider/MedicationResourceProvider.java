@@ -19,6 +19,7 @@ import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.param.DateAndListParam;
+import ca.uhn.fhir.rest.param.NumberAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
@@ -71,11 +72,12 @@ public class MedicationResourceProvider implements IResourceProvider {
             @OptionalParam(name = FieldNames.SUBSIDY_CODE) @Description(shortDefinition = "Search for resources with the specified subsidy code") TokenAndListParam subsidyCode,
             @OptionalParam(name = ExtendedMedication.SP_STATUS) @Description(shortDefinition = "Status of the medication, active, inactive (meaning no longer available) or entered-in-error") StringOrListParam status,
             @OptionalParam(name = FieldNames.LAST_MODIFIED) @Description(shortDefinition = "Date the underlying code system's content for this medication was last modified") DateAndListParam lastModified,
+            @OptionalParam(name = FieldNames.INGREDIENT_COUNT) @Description(shortDefinition = "Filter on the number of ingredients a Medication has") NumberAndListParam ingredientCount,
             @Count Integer theCount) throws IOException {
         final InstantDt searchTime = InstantDt.withCurrentTime();
         final int size = index.getMedicationsByParametersSize(ExtendedMedication.class, text, parent, ancestor,
             medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
-            subsidyCode, status, lastModified);
+            subsidyCode, status, lastModified, ingredientCount);
 
         return new IBundleProvider() {
 
@@ -91,7 +93,7 @@ public class MedicationResourceProvider implements IResourceProvider {
                 }
                 return index.getMedicationsByParameters(ExtendedMedication.class, text, parent, ancestor,
                     medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
-                    subsidyCode, status, lastModified, theFromIndex, theToIndex);
+                    subsidyCode, status, lastModified, ingredientCount, theFromIndex, theToIndex);
             }
 
             @Override
