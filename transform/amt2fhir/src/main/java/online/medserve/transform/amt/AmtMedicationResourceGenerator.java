@@ -46,12 +46,12 @@ import ca.uhn.fhir.validation.FhirValidator;
 import online.medserve.extension.ExtendedMedication;
 import online.medserve.extension.ExtendedReference;
 import online.medserve.extension.ExtendedSubstance;
+import online.medserve.extension.IsReplacedByExtension;
 import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.MedicationSourceExtension;
 import online.medserve.extension.ParentExtendedElement;
-import online.medserve.extension.ResourceReplacedExtension;
-import online.medserve.extension.ResourceReplacementExtension;
+import online.medserve.extension.ReplacesResourceExtension;
 import online.medserve.extension.ResourceWithHistoricalAssociations;
 import online.medserve.extension.SubsidyExtension;
 import online.medserve.transform.amt.cache.AmtCache;
@@ -200,7 +200,7 @@ public class AmtMedicationResourceGenerator {
         if (concept.getReplacementConcept() != null) {
             for (ImmutableTriple<Long, Concept, Date> replacement : concept.getReplacementConcept()) {
                 resource.getReplacementResources()
-                    .add(new ResourceReplacementExtension(toReference(replacement.middle, resourceType),
+                    .add(new IsReplacedByExtension(toReference(replacement.middle, resourceType),
                         AmtConcept.fromId(replacement.left).toCoding(), new DateType(replacement.right)));
             }
         }
@@ -208,7 +208,7 @@ public class AmtMedicationResourceGenerator {
         if (concept.getReplacedConcept() != null) {
             for (ImmutableTriple<Long, Concept, Date> replaced : concept.getReplacedConcept()) {
                 resource.getReplacedResources()
-                    .add(new ResourceReplacedExtension(toReference(replaced.middle, "Substance"),
+                    .add(new ReplacesResourceExtension(toReference(replaced.middle, resourceType),
                         AmtConcept.fromId(replaced.left).toCoding(), new DateType(replaced.right)));
             }
         }
@@ -238,7 +238,7 @@ public class AmtMedicationResourceGenerator {
                         new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), parent.getStatus()));
                     extension.setLastModified(new DateType(parent.getLastModified()));
 
-                    addHistoicalAssociations(concept, extension, "Substance");
+                    addHistoicalAssociations(concept, extension, "Medication");
 
                     addedConcepts.add(parent.getId());
                     addParentExtensions(parent, extension, addedConcepts, createdResources);
@@ -513,7 +513,7 @@ public class AmtMedicationResourceGenerator {
             new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
         reference.setLastModified(new DateType(concept.getLastModified()));
 
-        addHistoicalAssociations(concept, reference, "Substance");
+        addHistoicalAssociations(concept, reference, "Medication");
 
         return reference;
     }

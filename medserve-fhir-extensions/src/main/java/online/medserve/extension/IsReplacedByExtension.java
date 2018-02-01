@@ -12,18 +12,18 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.util.ElementUtil;
 
 @Block
-public class ResourceReplacedExtension extends BackboneElement {
+public class IsReplacedByExtension extends BackboneElement {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * A reference to a resource the resource replaces
+     * A reference to a replacement resource
      */
-    @Child(name = "resourceReplaced", min = 1, max = 1, summary = false)
+    @Child(name = "isReplacedBy", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/resourceReplaced", definedLocally = false, isModifier = false)
-    @Description(shortDefinition = "A reference to a resource the resource replaces")
-    private Reference resourceReplaced;
+            + "StructureDefinition/isReplacedBy", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "A reference to a replacement resource")
+    private Reference isReplacedBy;
 
     /**
      * Replacement type
@@ -43,14 +43,14 @@ public class ResourceReplacedExtension extends BackboneElement {
     @Description(shortDefinition = "Date the replacement was declared")
     private DateType replacementDate;
 
-    public ResourceReplacedExtension() {
+    public IsReplacedByExtension() {
         super();
     }
 
-    public ResourceReplacedExtension(Reference resourceReplaced, Coding replacementType,
+    public IsReplacedByExtension(Reference resourceReplacement, Coding replacementType,
             DateType replacementDate) {
         super();
-        this.resourceReplaced = resourceReplaced;
+        this.isReplacedBy = resourceReplacement;
         this.replacementType = replacementType;
         this.replacementDate = replacementDate;
     }
@@ -61,24 +61,24 @@ public class ResourceReplacedExtension extends BackboneElement {
     @Override
     public boolean isEmpty() {
         return super.isEmpty()
-                && ElementUtil.isEmpty(resourceReplaced, replacementType, replacementDate);
+                && ElementUtil.isEmpty(isReplacedBy, replacementType, replacementDate);
     }
 
     @Override
-    public ResourceReplacedExtension copy() {
-        ResourceReplacedExtension copy = new ResourceReplacedExtension();
-        copy.resourceReplaced = resourceReplaced;
+    public IsReplacedByExtension copy() {
+        IsReplacedByExtension copy = new IsReplacedByExtension();
+        copy.isReplacedBy = isReplacedBy;
         copy.replacementType = replacementType;
         copy.replacementDate = replacementDate;
         return copy;
     }
 
-    public Reference getResourceReplaced() {
-        return resourceReplaced;
+    public Reference getResourceReplacement() {
+        return isReplacedBy;
     }
 
-    public void setResourceReplaced(Reference resourceReplaced) {
-        this.resourceReplaced = resourceReplaced;
+    public void setResourceReplacement(Reference resourceReplacement) {
+        this.isReplacedBy = resourceReplacement;
     }
 
     public Coding getReplacementType() {

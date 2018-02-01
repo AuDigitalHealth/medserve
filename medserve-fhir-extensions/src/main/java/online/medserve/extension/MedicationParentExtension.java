@@ -68,20 +68,20 @@ public class MedicationParentExtension extends BackboneElement
     /**
      * Replacement resources for this resource
      */
-    @Child(name = "replacementResources", min = 1, max = 1, summary = false)
+    @Child(name = "isReplacedByResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/replacementResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/isReplacedByResources", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "Replacement resources for this resource")
-    private List<ResourceReplacementExtension> replacementResources;
+    private List<IsReplacedByExtension> isReplacedByResources;
 
     /**
      * Resources that this resource has replaced
      */
-    @Child(name = "replacedResources", min = 1, max = 1, summary = false)
+    @Child(name = "replacesResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/replacedResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/replacesResources", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "Resources that this resource has replaced")
-    private List<ResourceReplacedExtension> replacedResources;
+    private List<ReplacesResourceExtension> replacesResources;
 
     /**
      * It is important to override the isEmpty() method, adding a check for any newly added fields.
@@ -90,7 +90,7 @@ public class MedicationParentExtension extends BackboneElement
     public boolean isEmpty() {
         return super.isEmpty()
                 && ElementUtil.isEmpty(parentMedication, medicationResourceType, parentMedicationResources,
-                    medicationResourceStatus, lastModified, replacementResources, replacedResources);
+                    medicationResourceStatus, lastModified, isReplacedByResources, replacesResources);
     }
 
     public Reference getParentMedication() {
@@ -141,10 +141,10 @@ public class MedicationParentExtension extends BackboneElement
         copy.medicationResourceStatus = medicationResourceStatus;
         copy.parentMedicationResources = parentMedicationResources;
         copy.lastModified = lastModified;
-        copy.replacementResources = new ArrayList<>();
-        copy.replacementResources.addAll(replacementResources);
-        copy.replacedResources = new ArrayList<>();
-        copy.replacedResources.addAll(replacedResources);
+        copy.isReplacedByResources = new ArrayList<>();
+        copy.isReplacedByResources.addAll(isReplacedByResources);
+        copy.replacesResources = new ArrayList<>();
+        copy.replacesResources.addAll(replacesResources);
         return copy;
     }
 
@@ -168,29 +168,29 @@ public class MedicationParentExtension extends BackboneElement
     }
 
     @Override
-    public List<ResourceReplacementExtension> getReplacementResources() {
-        if (replacementResources == null) {
-            replacementResources = new ArrayList<>();
+    public List<IsReplacedByExtension> getReplacementResources() {
+        if (isReplacedByResources == null) {
+            isReplacedByResources = new ArrayList<>();
         }
-        return replacementResources;
+        return isReplacedByResources;
     }
 
     @Override
-    public void setReplacementResources(List<ResourceReplacementExtension> replacementResources) {
-        this.replacementResources = replacementResources;
+    public void setReplacementResources(List<IsReplacedByExtension> isReplacedByResources) {
+        this.isReplacedByResources = isReplacedByResources;
     }
 
     @Override
-    public List<ResourceReplacedExtension> getReplacedResources() {
-        if (replacedResources == null) {
-            replacedResources = new ArrayList<>();
+    public List<ReplacesResourceExtension> getReplacedResources() {
+        if (replacesResources == null) {
+            replacesResources = new ArrayList<>();
         }
-        return replacedResources;
+        return replacesResources;
     }
 
     @Override
-    public void setReplacedResources(List<ResourceReplacedExtension> replacedResources) {
-        this.replacedResources = replacedResources;
+    public void setReplacedResources(List<ReplacesResourceExtension> replacesResources) {
+        this.replacesResources = replacesResources;
     }
 
 }

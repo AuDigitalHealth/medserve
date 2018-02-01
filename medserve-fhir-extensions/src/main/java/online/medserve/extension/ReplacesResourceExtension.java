@@ -12,18 +12,18 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.util.ElementUtil;
 
 @Block
-public class ResourceReplacementExtension extends BackboneElement {
+public class ReplacesResourceExtension extends BackboneElement {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * A reference to a replacement resource
+     * A reference to a resource the resource replaces
      */
-    @Child(name = "resourceReplacement", min = 1, max = 1, summary = false)
+    @Child(name = "replacesResource", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/resourceReplacement", definedLocally = false, isModifier = false)
-    @Description(shortDefinition = "A reference to a replacement resource")
-    private Reference resourceReplacement;
+            + "StructureDefinition/replacesResource", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "A reference to a resource the resource replaces")
+    private Reference replacesResource;
 
     /**
      * Replacement type
@@ -43,14 +43,14 @@ public class ResourceReplacementExtension extends BackboneElement {
     @Description(shortDefinition = "Date the replacement was declared")
     private DateType replacementDate;
 
-    public ResourceReplacementExtension() {
+    public ReplacesResourceExtension() {
         super();
     }
 
-    public ResourceReplacementExtension(Reference resourceReplacement, Coding replacementType,
+    public ReplacesResourceExtension(Reference resourceReplaced, Coding replacementType,
             DateType replacementDate) {
         super();
-        this.resourceReplacement = resourceReplacement;
+        this.replacesResource = resourceReplaced;
         this.replacementType = replacementType;
         this.replacementDate = replacementDate;
     }
@@ -61,24 +61,24 @@ public class ResourceReplacementExtension extends BackboneElement {
     @Override
     public boolean isEmpty() {
         return super.isEmpty()
-                && ElementUtil.isEmpty(resourceReplacement, replacementType, replacementDate);
+                && ElementUtil.isEmpty(replacesResource, replacementType, replacementDate);
     }
 
     @Override
-    public ResourceReplacementExtension copy() {
-        ResourceReplacementExtension copy = new ResourceReplacementExtension();
-        copy.resourceReplacement = resourceReplacement;
+    public ReplacesResourceExtension copy() {
+        ReplacesResourceExtension copy = new ReplacesResourceExtension();
+        copy.replacesResource = replacesResource;
         copy.replacementType = replacementType;
         copy.replacementDate = replacementDate;
         return copy;
     }
 
-    public Reference getResourceReplacement() {
-        return resourceReplacement;
+    public Reference getResourceReplaced() {
+        return replacesResource;
     }
 
-    public void setResourceReplacement(Reference resourceReplacement) {
-        this.resourceReplacement = resourceReplacement;
+    public void setResourceReplaced(Reference resourceReplaced) {
+        this.replacesResource = resourceReplaced;
     }
 
     public Coding getReplacementType() {
