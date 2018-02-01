@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,6 +31,9 @@ import online.medserve.transform.util.FileUtils;
 import online.medserve.transform.util.LoggingTimer;
 
 public class AmtCache {
+
+    private static final SimpleDateFormat effectiveTimeFormat = new SimpleDateFormat("yyyyMMdd");
+
     private static final String PREFERRED = "900000000000548007";
 
     private static final String FSN = "900000000000003001";
@@ -58,6 +64,7 @@ public class AmtCache {
     private Map<String, String> atcCodes = new HashMap<>();
     private Map<String, String> caution = new HashMap<>();
     private Map<String, String> notes = new HashMap<>();
+    private Map<Long, Date> relationshipDateCache = new HashMap<>();
 
     public AmtCache(FileSystem amtZip, FileSystem pbsExtract) throws IOException {
         processAmtFiles(amtZip);
@@ -195,10 +202,12 @@ public class AmtCache {
         Files.walkFileTree(amtZip.getPath("/"), visitor);
 
         FileUtils.readFile(visitor.getConceptFile(), s -> handleConceptRow(s), true, "\t");
+        FileUtils.readFile(visitor.getRelationshipFile(), s -> buildLastRelationshipDateCache(s), true, "\t");
         FileUtils.readFile(visitor.getRelationshipFile(), s -> handleRelationshipRow(s), true, "\t");
         FileUtils.readFile(visitor.getLanguageRefsetFile(), s -> handleLanguageRefsetRow(s), true, "\t");
         FileUtils.readFile(visitor.getDescriptionFile(), s -> handleDescriptionRow(s), true, "\t");
         FileUtils.readFile(visitor.getArtgIdRefsetFile(), s -> handleArtgIdRefsetRow(s), true, "\t");
+        FileUtils.readFile(visitor.getAssociationRefsetFile(), s -> handleAssociationRefsetRow(s), true, "\t");
 
         for (Path file : visitor.getDatatypePropertyFiles()) {
             FileUtils.readFile(file, s -> handleDatatypeRefsetRow(s), true, "\t");
@@ -292,22 +301,48 @@ public class AmtCache {
     }
 
     private void handleConceptRow(String[] row) {
-        if (isActive(row) && isAmtModule(row)) {
+        if (isAmtModule(row)) {
             long conceptId = Long.parseLong(row[0]);
             graph.addVertex(conceptId);
-            conceptCache.put(conceptId, new Concept(conceptId, true));
+            conceptCache.put(conceptId, new Concept(conceptId, isActive(row), parseDate(row[1])));
+        }
+    }
+
+    private synchronized Date parseDate(String string) {
+        try {
+            return effectiveTimeFormat.parse(string);
+        } catch (ParseException e) {
+            throw new RuntimeException("Cannot parse effective time " + string, e);
+        }
+    }
+
+    private void buildLastRelationshipDateCache(String[] row) {
+        long source = Long.parseLong(row[4]);
+        long destination = Long.parseLong(row[5]);
+        Date effectiveTime = parseDate(row[1]);
+        Concept sourceConcept = conceptCache.get(source);
+
+        if (isAmtModule(row) && AttributeType.isEnumValue(row[7]) && graph.containsVertex(source)
+                && graph.containsVertex(destination) && !sourceConcept.isActive()) {
+
+            if (!relationshipDateCache.containsKey(source) || relationshipDateCache.get(source).before(effectiveTime)) {
+                relationshipDateCache.put(source, effectiveTime);
+            }
         }
     }
 
     private void handleRelationshipRow(String[] row) {
         long source = Long.parseLong(row[4]);
         long destination = Long.parseLong(row[5]);
+        Concept sourceConcept = conceptCache.get(source);
+        Date effectiveTime = parseDate(row[1]);
 
-        if (isActive(row) && isAmtModule(row) && AttributeType.isEnumValue(row[7]) && graph.containsVertex(source)
-                && graph.containsVertex(destination)) {
-
+        if (isAmtModule(row) && AttributeType.isEnumValue(row[7]) && graph.containsVertex(source)
+                && graph.containsVertex(destination)
+                && (isActive(row) || (!sourceConcept.isActive()
+                        && effectiveTime.equals(relationshipDateCache.get(source))))) {
+            
             AttributeType type = AttributeType.fromIdString(row[7]);
-            Concept sourceConcept = conceptCache.get(source);
             Concept destinationConcept = conceptCache.get(destination);
 
             if (type.equals(AttributeType.IS_A)) {
@@ -322,15 +357,19 @@ public class AmtCache {
                 if (!relationshipGroups.containsKey(groupId)) {
                     relationshipGroups.put(groupId, new HashSet<Relationship>());
                 }
-                Relationship relationship = new Relationship(sourceConcept, destinationConcept, type);
+                Relationship relationship =
+                        new Relationship(sourceConcept, destinationConcept, type, isActive(row), effectiveTime);
                 relationshipGroups.get(groupId).add(relationship);
                 relationshipCache.put(Long.parseLong(row[0]), relationship);
             }
+            sourceConcept.updateLastModified(effectiveTime);
         }
     }
 
     private void handleDescriptionRow(String[] row) {
         Long conceptId = Long.parseLong(row[4]);
+        Date effectiveTime = parseDate(row[1]);
+
         if (isActive(row) && isAmtModule(row) && conceptCache.containsKey(conceptId)) {
             String descriptionId = row[0];
             String term = row[7];
@@ -340,6 +379,8 @@ public class AmtCache {
             } else if (preferredDescriptionIdCache.contains(Long.parseLong(descriptionId))) {
                 concept.setPreferredTerm(term);
             }
+
+            concept.updateLastModified(effectiveTime);
         }
     }
 
@@ -350,23 +391,48 @@ public class AmtCache {
     }
 
     private void handleDatatypeRefsetRow(String[] row) {
-        if (isActive(row) && isAmtModule(row)) {
+        if (isAmtModule(row) && relationshipCache.containsKey(Long.parseLong(row[5]))) {
             Relationship relationship = relationshipCache.get(Long.parseLong(row[5]));
-            long unitId = Long.parseLong(row[6]);
-            relationship.setDatatypeProperty(new DataTypeProperty(row[8], conceptCache.get(unitId),
-                AttributeType.fromIdString(row[4])));
+            Date effectiveTime = parseDate(row[1]);
+
+            if ((relationship.isActive() && isActive(row))
+                    || (!relationship.isActive() && !isActive(row)
+                            && relationshipDateCache.get(relationship.getSource().getId()).equals(effectiveTime)
+                            && relationship.getEffectiveTime().equals(effectiveTime))) {
+                long unitId = Long.parseLong(row[6]);
+                relationship.setDatatypeProperty(new DataTypeProperty(row[8], conceptCache.get(unitId),
+                    AttributeType.fromIdString(row[4])));
+                relationship.getSource().updateLastModified(effectiveTime);
+            }
         }
     }
 
     private void handleArtgIdRefsetRow(String[] row) {
-        if (isActive(row) && isAmtModule(row)) {
-            long conceptId = Long.parseLong(row[5]);
+        long conceptId = Long.parseLong(row[5]);
+        Concept concept = conceptCache.get(conceptId);
+        if ((isActive(row) || !concept.isActive()) && isAmtModule(row)) {
+
             Set<String> artgIds = artgIdCache.get(conceptId);
             if (artgIds == null) {
                 artgIds = new HashSet<>();
             }
             artgIds.add(row[6]);
             artgIdCache.put(conceptId, artgIds);
+            concept.updateLastModified(parseDate(row[1]));
+        }
+    }
+
+    private void handleAssociationRefsetRow(String[] row) {
+        Concept source = conceptCache.get(Long.parseLong(row[5]));
+        Concept target = conceptCache.get(Long.parseLong(row[6]));
+        if (isActive(row) && isAmtModule(row) && source != null && target != null) {
+            long type = Long.parseLong(row[4]);
+            Date effectiveTime = parseDate(row[1]);
+
+            source.addReplacementConcept(type, target, effectiveTime);
+            target.addReplacedConcept(type, source, effectiveTime);
+
+            source.updateLastModified(effectiveTime);
         }
     }
 

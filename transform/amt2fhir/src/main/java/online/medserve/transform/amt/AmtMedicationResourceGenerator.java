@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,18 +14,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hl7.fhir.dstu3.model.Annotation;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.ContactPoint;
+import org.hl7.fhir.dstu3.model.DateType;
 import org.hl7.fhir.dstu3.model.DecimalType;
 import org.hl7.fhir.dstu3.model.DomainResource;
+import org.hl7.fhir.dstu3.model.Enumeration;
 import org.hl7.fhir.dstu3.model.Medication;
 import org.hl7.fhir.dstu3.model.Medication.MedicationPackageComponent;
 import org.hl7.fhir.dstu3.model.Medication.MedicationPackageContentComponent;
 import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
+import org.hl7.fhir.dstu3.model.Medication.MedicationStatusEnumFactory;
 import org.hl7.fhir.dstu3.model.Narrative;
 import org.hl7.fhir.dstu3.model.Narrative.NarrativeStatus;
 import org.hl7.fhir.dstu3.model.Organization;
@@ -34,17 +38,21 @@ import org.hl7.fhir.dstu3.model.Reference;
 import org.hl7.fhir.dstu3.model.Resource;
 import org.hl7.fhir.dstu3.model.SimpleQuantity;
 import org.hl7.fhir.dstu3.model.StringType;
-import org.hl7.fhir.dstu3.model.Substance;
+import org.hl7.fhir.dstu3.model.Substance.FHIRSubstanceStatus;
 import org.hl7.fhir.dstu3.model.UriType;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.validation.FhirValidator;
 import online.medserve.extension.ExtendedMedication;
 import online.medserve.extension.ExtendedReference;
+import online.medserve.extension.ExtendedSubstance;
 import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.MedicationSourceExtension;
 import online.medserve.extension.ParentExtendedElement;
+import online.medserve.extension.ResourceReplacedExtension;
+import online.medserve.extension.ResourceReplacementExtension;
+import online.medserve.extension.ResourceWithHistoricalAssociations;
 import online.medserve.extension.SubsidyExtension;
 import online.medserve.transform.amt.cache.AmtCache;
 import online.medserve.transform.amt.cache.PbsCodeSystemUtil;
@@ -111,10 +119,17 @@ public class AmtMedicationResourceGenerator {
         Reference reference = toReference(concept, "Substance");
         if (!processedConcepts.contains(Long.toString(concept.getId()))) {
             processedConcepts.add(Long.toString(concept.getId()));
-            Substance substance = new Substance();
+            ExtendedSubstance substance = new ExtendedSubstance();
             setStandardResourceElements(concept, substance);
 
+            addHistoicalAssociations(concept, substance, "Substance");
+
+            substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
+
             substance.setCode(concept.toCodeableConcept());
+            substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
+            substance.setLastModified(new DateType(concept.getLastModified()));
+
             concept.getMultipleDestinations(AttributeType.IS_MODIFICATION_OF)
                 .forEach(m -> substance.addIngredient().setSubstance(createSubstanceResource(m, createdResources)));
             createdResources.add(substance);
@@ -130,7 +145,13 @@ public class AmtMedicationResourceGenerator {
                 new StringType(amtVersion)));
         setStandardResourceElements(concept, medication);
 
+        addHistoicalAssociations(concept, medication, "Medication");
+
+        medication.setLastModified(new DateType(concept.getLastModified()));
+
         medication.setCode(concept.toCodeableConcept());
+
+        medication.setStatus(concept.getStatus());
 
         medication.setMedicationResourceType(concept.getMedicationType().getCode());
 
@@ -174,6 +195,25 @@ public class AmtMedicationResourceGenerator {
         return medication;
     }
 
+    private void addHistoicalAssociations(Concept concept, ResourceWithHistoricalAssociations resource,
+            String resourceType) {
+        if (concept.getReplacementConcept() != null) {
+            for (ImmutableTriple<Long, Concept, Date> replacement : concept.getReplacementConcept()) {
+                resource.getReplacementResources()
+                    .add(new ResourceReplacementExtension(toReference(replacement.middle, resourceType),
+                        AmtConcept.fromId(replacement.left).toCoding(), new DateType(replacement.right)));
+            }
+        }
+
+        if (concept.getReplacedConcept() != null) {
+            for (ImmutableTriple<Long, Concept, Date> replaced : concept.getReplacedConcept()) {
+                resource.getReplacedResources()
+                    .add(new ResourceReplacedExtension(toReference(replaced.middle, "Substance"),
+                        AmtConcept.fromId(replaced.left).toCoding(), new DateType(replaced.right)));
+            }
+        }
+    }
+
     private void setStandardResourceElements(Concept concept, DomainResource resource) {
         resource.setId(Long.toString(concept.getId()));
         Narrative narrative = new Narrative();
@@ -194,6 +234,11 @@ public class AmtMedicationResourceGenerator {
                     MedicationParentExtension extension = new MedicationParentExtension();
                     extension.setParentMedication(toReference(parent, "Medication"));
                     extension.setMedicationResourceType(parent.getMedicationType().getCode());
+                    extension.setMedicationResourceStatus(
+                        new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), parent.getStatus()));
+                    extension.setLastModified(new DateType(parent.getLastModified()));
+
+                    addHistoicalAssociations(concept, extension, "Substance");
 
                     addedConcepts.add(parent.getId());
                     addParentExtensions(parent, extension, addedConcepts, createdResources);
@@ -357,18 +402,13 @@ public class AmtMedicationResourceGenerator {
                 || relationship.getType().equals(AttributeType.HAS_COMPONENT_PACK))
                 && relationship.getSource().hasParent(AmtConcept.TPP)) {
             Collection<Long> ctpp = conceptCache.getDescendantOf(relationship.getSource().getId());
-            if (ctpp.size() != 1) {
-                throw new RuntimeException("More than one ctpp found for "
-                        + relationship.getSource().toConceptReference()
-                        + " ctpps were " + StringUtils.join(ctpp, "'"));
-            }
 
-            Set<Concept> destinationSet = conceptCache.getConcept(ctpp.iterator().next())
-                .getRelationships(relationship.getType())
-                .stream()
-                .flatMap(r -> r.getDestination().getParents().values().stream())
-                .filter(c -> c.hasParent(relationship.getDestination()))
-                .collect(Collectors.toSet());
+            Set<Concept> destinationSet =
+                    ctpp.stream()
+                        .flatMap(c -> conceptCache.getConcept(c).getRelationships(relationship.getType()).stream())
+                        .flatMap(r -> r.getDestination().getParents().values().stream())
+                        .filter(c -> c.hasParent(relationship.getDestination()))
+                        .collect(Collectors.toSet());
 
             if (destinationSet.size() != 1) {
                 throw new RuntimeException("Destination set was expected to be 1 but was " + destinationSet);
@@ -469,6 +509,12 @@ public class AmtMedicationResourceGenerator {
         reference.setDisplay(concept.getPreferredTerm());
         addParentExtensions(concept, reference, new HashSet<>(), createdResources);
         reference.setMedicationResourceType(concept.getMedicationType().getCode());
+        reference.setMedicationResourceStatus(
+            new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
+        reference.setLastModified(new DateType(concept.getLastModified()));
+
+        addHistoicalAssociations(concept, reference, "Substance");
+
         return reference;
     }
 }

@@ -19,6 +19,7 @@ import org.apache.lucene.store.MMapDirectory;
 import org.hl7.fhir.dstu3.model.BaseResource;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
+import ca.uhn.fhir.rest.param.DateAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
@@ -71,24 +72,25 @@ public class Index {
         return builder.build();
     }
 
-    public int getResourcesByTextSize(Class<? extends BaseResource> clazz, StringAndListParam text) throws IOException {
-        return searcher.count(QueryBuilder.createTextSearchBuilder(clazz, text).build());
+    public int getResourcesByTextSize(Class<? extends BaseResource> clazz, StringAndListParam text,
+            StringOrListParam status, DateAndListParam lastModified) throws IOException {
+        return searcher.count(QueryBuilder.createTextSearchBuilder(clazz, text, status, lastModified).build());
     }
 
     public List<IBaseResource> getResourcesByText(Class<? extends BaseResource> clazz, StringAndListParam text,
-            int theFromIndex, int theToIndex) {
-        return getResources(clazz, theFromIndex, theToIndex, QueryBuilder.createTextSearchBuilder(clazz, text).build());
+            StringOrListParam status, DateAndListParam lastModified, int theFromIndex, int theToIndex) {
+        return getResources(clazz, theFromIndex, theToIndex,
+            QueryBuilder.createTextSearchBuilder(clazz, text, status, lastModified).build());
     }
 
     public int getMedicationsByParametersSize(Class<ExtendedMedication> clazz, StringAndListParam text,
             TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
             TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
             TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
-            TokenAndListParam subsidyCode)
+            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified)
             throws IOException {
         Query query = getMedicationsByParametersQuery(clazz, text, parent, ancestor, medicationResourceType, form,
-            container, ingredient, packageItem,
-            brand, isBrand, manufacturer, subsidyCode);
+            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, status, lastModified);
         return searcher.count(query);
     }
 
@@ -96,10 +98,11 @@ public class Index {
             TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
             TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
             TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
-            TokenAndListParam subsidyCode, int theFromIndex, int theToIndex) {
+            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified, int theFromIndex,
+            int theToIndex) {
 
         Query query = getMedicationsByParametersQuery(clazz, text, parent, ancestor, medicationResourceType, form,
-            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode);
+            container, ingredient, packageItem, brand, isBrand, manufacturer, subsidyCode, status, lastModified);
 
         return getResources(clazz, theFromIndex, theToIndex, query);
     }
@@ -108,8 +111,8 @@ public class Index {
             TokenAndListParam parent, TokenAndListParam ancestor, StringOrListParam medicationResourceType,
             TokenAndListParam form, TokenAndListParam container, TokenAndListParam ingredient,
             TokenAndListParam packageItem, TokenAndListParam brand, String isBrand, TokenAndListParam manufacturer,
-            TokenAndListParam subsidyCode) {
-        Builder builder = QueryBuilder.createTextSearchBuilder(clazz, text);
+            TokenAndListParam subsidyCode, StringOrListParam status, DateAndListParam lastModified) {
+        Builder builder = QueryBuilder.createTextSearchBuilder(clazz, text, status, lastModified);
 
         QueryBuilder.addOptionalReferenceAndList(parent, builder, FieldNames.PARENT,
             ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);

@@ -2,6 +2,7 @@ package online.medserve.transform.amt.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,8 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
 
 import online.medserve.extension.MedicationType;
 import online.medserve.transform.amt.enumeration.AmtConcept;
@@ -28,12 +31,18 @@ public class Concept {
     private Coding coding;
     private Map<Long, Concept> ancestors = new HashMap<>();
     private boolean active;
+    private Date lastModified;
+    private Date conceptLastModified;
     private Set<Subsidy> subsidies = new HashSet<>();
     private Manufacturer manufacturer;
+    private List<ImmutableTriple<Long, Concept, Date>> replacementConcepts;
+    private List<ImmutableTriple<Long, Concept, Date>> replacedConcepts;
 
-    public Concept(long id, boolean active) {
+    public Concept(long id, boolean active, Date conceptLastModified) {
         this.id = id;
         this.active = active;
+        this.conceptLastModified = conceptLastModified;
+        this.lastModified = conceptLastModified;
     }
 
     public void addParent(Concept concept) {
@@ -247,6 +256,46 @@ public class Concept {
             return MedicationType.UnbrandedProduct;
         }
         throw new RuntimeException("Concept " + this + " is not of a known MedicationType");
+    }
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
+    public Date getConceptLastModified() {
+        return conceptLastModified;
+    }
+
+    public void updateLastModified(Date effectiveTime) {
+        if (effectiveTime.after(lastModified)) {
+            lastModified = effectiveTime;
+        }
+    }
+
+    public MedicationStatus getStatus() {
+        return active ? MedicationStatus.ACTIVE : MedicationStatus.ENTEREDINERROR;
+    }
+
+    public void addReplacementConcept(long type, Concept replacement, Date date) {
+        if (replacementConcepts == null) {
+            replacementConcepts = new ArrayList<>();
+        }
+        replacementConcepts.add(new ImmutableTriple<Long, Concept, Date>(type, replacement, date));
+    }
+
+    public void addReplacedConcept(long type, Concept retiredConcept, Date date) {
+        if (replacedConcepts == null) {
+            replacedConcepts = new ArrayList<>();
+        }
+        replacedConcepts.add(new ImmutableTriple<Long, Concept, Date>(type, retiredConcept, date));
+    }
+
+    public List<ImmutableTriple<Long, Concept, Date>> getReplacementConcept() {
+        return replacementConcepts;
+    }
+
+    public List<ImmutableTriple<Long, Concept, Date>> getReplacedConcept() {
+        return replacedConcepts;
     }
 
 }

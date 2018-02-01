@@ -33,6 +33,7 @@ import org.hl7.fhir.exceptions.FHIRException;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import online.medserve.extension.ExtendedMedication;
+import online.medserve.extension.ExtendedSubstance;
 import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.ParentExtendedElement;
 import online.medserve.extension.SubsidyExtension;
@@ -74,7 +75,11 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
             if (resource instanceof ExtendedMedication) {
                 indextMedicationResource(resource, document);
             } else if (resource instanceof Substance) {
-                Substance substance = Substance.class.cast(resource);
+                ExtendedSubstance substance = ExtendedSubstance.class.cast(resource);
+                document.add(
+                    new StringField(FieldNames.STATUS, substance.getStatus().toCode(), Store.NO));
+                document.add(
+                    new StringField(FieldNames.LAST_MODIFIED, substance.getLastModified().asStringValue(), Store.NO));
                 indexCodeableConcept(document, substance.getCode(), FieldNames.CODE);
             } else if (resource instanceof Organization) {
                 // nothing special here
@@ -90,6 +95,12 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
 
     private void indextMedicationResource(Resource resource, Document document) {
         ExtendedMedication medication = ExtendedMedication.class.cast(resource);
+
+        document.add(
+            new StringField(FieldNames.STATUS, medication.getStatus().toCode(), Store.NO));
+
+        document.add(
+            new StringField(FieldNames.LAST_MODIFIED, medication.getLastModified().asStringValue(), Store.NO));
 
         indexCodeableConcept(document, medication.getCode(), FieldNames.CODE);
 

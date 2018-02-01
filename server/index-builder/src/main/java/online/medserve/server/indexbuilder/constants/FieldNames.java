@@ -19,6 +19,8 @@ public final class FieldNames {
     public static final String TEXT_FIELD_SUFFIX = "-text";
     public static final String MEDICATION_RESOURCE_TYPE = "medication-resource-type";
     public static final String PARENT = "parent";
+    public static final String STATUS = "status";
+    public static final String LAST_MODIFIED = "last-modified";
 
     private FieldNames() {
         throw new AssertionError("Constants class not to be constructed!");

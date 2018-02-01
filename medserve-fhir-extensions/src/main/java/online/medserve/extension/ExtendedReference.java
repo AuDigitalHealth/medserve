@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.DateType;
+import org.hl7.fhir.dstu3.model.Enumeration;
+import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
 import org.hl7.fhir.dstu3.model.Reference;
 
 import ca.uhn.fhir.model.api.annotation.Child;
@@ -14,7 +17,7 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.util.ElementUtil;
 
 @DatatypeDef(name = "ExtendedReference", isSpecialization = true, profileOf = Reference.class)
-public class ExtendedReference extends Reference implements ParentExtendedElement {
+public class ExtendedReference extends Reference implements ParentExtendedElement, ResourceWithHistoricalAssociations {
 
     public static final String PROFILE_URL_BASE = "http://medserve.online/fhir/";
     private static final long serialVersionUID = 1L;
@@ -34,13 +37,52 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     @Description(shortDefinition = "A code that indicates what level of abstraction the medication represents")
     private Coding medicationResourceType;
 
+    /**
+     * Status of the referenced medication
+     */
+    @Child(name = "medicationResourceReferenceStatus", min = 1, max = 1, summary = true)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/medicationResourceReferenceStatus", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Status of the referenced medication")
+    private Enumeration<MedicationStatus> medicationResourceStatus;
+
+    /**
+     * The date the underlying definition of the concept or its descriptions were last changed.
+     */
+    @Child(name = "lastModified", min = 1, max = 1, summary = false)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/lastModified", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "The date the underlying definition of the concept or its descriptions were last changed.")
+    private DateType lastModified;
+
+    /**
+     * Replacement resources for this resource
+     */
+    @Child(name = "replacementResources", min = 1, max = 1, summary = false)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/replacementResources", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Replacement resources for this resource")
+    private List<ResourceReplacementExtension> replacementResources;
+
+    /**
+     * Resources that this resource has replaced
+     */
+    @Child(name = "replacedResources", min = 1, max = 1, summary = false)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/replacedResources", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Resources that this resource has replaced")
+    private List<ResourceReplacedExtension> replacedResources;
+
+    public ExtendedReference() {}
+
     public ExtendedReference(String theReference) {
         super(theReference);
     }
 
     @Override
     public boolean isEmpty() {
-        return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType);
+        return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, medicationResourceStatus, lastModified,
+            replacementResources, replacedResources);
     }
 
     @Override
@@ -71,4 +113,50 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     public void setMedicationResourceType(Coding medicationResourceType) {
         this.medicationResourceType = medicationResourceType;
     }
+
+    public Enumeration<MedicationStatus> getMedicationResourceStatus() {
+        return medicationResourceStatus;
+    }
+
+    public void setMedicationResourceStatus(Enumeration<MedicationStatus> medicationResourceStatus) {
+        this.medicationResourceStatus = medicationResourceStatus;
+    }
+
+    public DateType getLastModified() {
+        if (lastModified == null) {
+            lastModified = new DateType();
+        }
+        return lastModified;
+    }
+
+    public void setLastModified(DateType lastModified) {
+        this.lastModified = lastModified;
+    }
+
+    @Override
+    public List<ResourceReplacementExtension> getReplacementResources() {
+        if (replacementResources == null) {
+            replacementResources = new ArrayList<>();
+        }
+        return replacementResources;
+    }
+
+    @Override
+    public void setReplacementResources(List<ResourceReplacementExtension> replacementResources) {
+        this.replacementResources = replacementResources;
+    }
+
+    @Override
+    public List<ResourceReplacedExtension> getReplacedResources() {
+        if (replacedResources == null) {
+            replacedResources = new ArrayList<>();
+        }
+        return replacedResources;
+    }
+
+    @Override
+    public void setReplacedResources(List<ResourceReplacedExtension> replacedResources) {
+        this.replacedResources = replacedResources;
+    }
+
 }
