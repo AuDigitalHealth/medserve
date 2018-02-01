@@ -58,20 +58,20 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     /**
      * Replacement resources for this resource
      */
-    @Child(name = "replacementResources", min = 1, max = 1, summary = false)
+    @Child(name = "isReplacedByResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/replacementResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/isReplacedByResources", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "Replacement resources for this resource")
-    private List<ResourceReplacementExtension> replacementResources;
+    private List<IsReplacedByExtension> isReplacedByResources;
 
     /**
      * Resources that this resource has replaced
      */
-    @Child(name = "replacedResources", min = 1, max = 1, summary = false)
+    @Child(name = "replacesResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/replacedResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/replacesResources", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "Resources that this resource has replaced")
-    private List<ResourceReplacedExtension> replacedResources;
+    private List<ReplacesResourceExtension> replacesResources;
 
     public ExtendedReference() {}
 
@@ -82,7 +82,7 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     @Override
     public boolean isEmpty() {
         return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, medicationResourceStatus, lastModified,
-            replacementResources, replacedResources);
+            isReplacedByResources, replacesResources);
     }
 
     @Override
@@ -134,29 +134,29 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     }
 
     @Override
-    public List<ResourceReplacementExtension> getReplacementResources() {
-        if (replacementResources == null) {
-            replacementResources = new ArrayList<>();
+    public List<IsReplacedByExtension> getReplacementResources() {
+        if (isReplacedByResources == null) {
+            isReplacedByResources = new ArrayList<>();
         }
-        return replacementResources;
+        return isReplacedByResources;
     }
 
     @Override
-    public void setReplacementResources(List<ResourceReplacementExtension> replacementResources) {
-        this.replacementResources = replacementResources;
+    public void setReplacementResources(List<IsReplacedByExtension> replacementResources) {
+        this.isReplacedByResources = replacementResources;
     }
 
     @Override
-    public List<ResourceReplacedExtension> getReplacedResources() {
-        if (replacedResources == null) {
-            replacedResources = new ArrayList<>();
+    public List<ReplacesResourceExtension> getReplacedResources() {
+        if (replacesResources == null) {
+            replacesResources = new ArrayList<>();
         }
-        return replacedResources;
+        return replacesResources;
     }
 
     @Override
-    public void setReplacedResources(List<ResourceReplacedExtension> replacedResources) {
-        this.replacedResources = replacedResources;
+    public void setReplacedResources(List<ReplacesResourceExtension> replacedResources) {
+        this.replacesResources = replacedResources;
     }
 
 }

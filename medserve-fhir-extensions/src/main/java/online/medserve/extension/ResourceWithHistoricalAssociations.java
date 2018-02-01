@@ -4,12 +4,12 @@ import java.util.List;
 
 public interface ResourceWithHistoricalAssociations {
 
-    List<ResourceReplacementExtension> getReplacementResources();
+    List<IsReplacedByExtension> getReplacementResources();
 
-    void setReplacementResources(List<ResourceReplacementExtension> replacementResources);
+    void setReplacementResources(List<IsReplacedByExtension> replacementResources);
 
-    List<ResourceReplacedExtension> getReplacedResources();
+    List<ReplacesResourceExtension> getReplacedResources();
 
-    void setReplacedResources(List<ResourceReplacedExtension> replacedResources);
+    void setReplacedResources(List<ReplacesResourceExtension> replacedResources);
 
 }

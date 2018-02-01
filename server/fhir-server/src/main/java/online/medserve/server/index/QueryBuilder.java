@@ -83,7 +83,7 @@ public final class QueryBuilder {
                         case ENDS_BEFORE:
                         case LESSTHAN:
                             subAndQuery.add(
-                                TermRangeQuery.newStringRange(fieldName, "*", date.getValueAsString(), true, false),
+                                TermRangeQuery.newStringRange(fieldName, null, date.getValueAsString(), true, false),
                                 Occur.SHOULD);
                             break;
                         case EQUAL:
