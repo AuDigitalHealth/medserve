@@ -3,6 +3,7 @@ package online.medserve.server.index;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -15,6 +16,9 @@ import org.hl7.fhir.dstu3.model.BaseResource;
 import ca.uhn.fhir.rest.param.DateAndListParam;
 import ca.uhn.fhir.rest.param.DateOrListParam;
 import ca.uhn.fhir.rest.param.DateParam;
+import ca.uhn.fhir.rest.param.NumberAndListParam;
+import ca.uhn.fhir.rest.param.NumberOrListParam;
+import ca.uhn.fhir.rest.param.NumberParam;
 import ca.uhn.fhir.rest.param.ParamPrefixEnum;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
@@ -64,6 +68,60 @@ public final class QueryBuilder {
                     searchCodableConcept(nextString, subAndQuery, string, Occur.SHOULD);
                 }
                 builder.add(subAndQuery.build(), mustnot ? Occur.MUST_NOT : Occur.MUST);
+            }
+        }
+    }
+
+    public static void addOptionalNumberAndList(NumberAndListParam parameter, Builder builder,
+            String fieldName) {
+        if (parameter != null) {
+            List<NumberOrListParam> numberQueries = parameter.getValuesAsQueryTokens();
+            for (NumberOrListParam numberQuery : numberQueries) {
+                Builder subAndQuery = new BooleanQuery.Builder();
+                List<NumberParam> queryTokens = numberQuery.getValuesAsQueryTokens();
+                // Only return results that match at least one of the tokens in the list below
+                for (NumberParam numberParam : queryTokens) {
+                    ParamPrefixEnum prefix =
+                            numberParam.getPrefix() == null ? ParamPrefixEnum.EQUAL : numberParam.getPrefix();
+                    switch (prefix) {
+                        case LESSTHAN:
+                            subAndQuery.add(
+                                IntPoint.newRangeQuery(fieldName, Integer.MIN_VALUE,
+                                    Math.subtractExact(numberParam.getValue().intValue(), 1)),
+                                Occur.SHOULD);
+                            break;
+                        case EQUAL:
+                            subAndQuery.add(
+                                IntPoint.newExactQuery(fieldName, numberParam.getValue().intValueExact()),
+                                Occur.SHOULD);
+                            break;
+                        case GREATERTHAN:
+                            subAndQuery.add(
+                                IntPoint.newRangeQuery(fieldName, Math.addExact(numberParam.getValue().intValue(), 1),
+                                    Integer.MAX_VALUE),
+                                Occur.SHOULD);
+                            break;
+                        case GREATERTHAN_OR_EQUALS:
+                            subAndQuery.add(
+                                IntPoint.newRangeQuery(fieldName, numberParam.getValue().intValue(), Integer.MAX_VALUE),
+                                Occur.SHOULD);
+                            break;
+                        case LESSTHAN_OR_EQUALS:
+                            subAndQuery.add(
+                                IntPoint.newRangeQuery(fieldName, Integer.MIN_VALUE, numberParam.getValue().intValue()),
+                                Occur.SHOULD);
+                            break;
+                        case NOT_EQUAL:
+                            subAndQuery.add(
+                                IntPoint.newExactQuery(fieldName, numberParam.getValue().intValueExact()),
+                                Occur.MUST_NOT);
+                            break;
+                        default:
+                            throw new RuntimeException("Unknown NumberParam prefix " + numberParam.getPrefix());
+                    }
+
+                }
+                builder.add(subAndQuery.build(), Occur.MUST);
             }
         }
     }

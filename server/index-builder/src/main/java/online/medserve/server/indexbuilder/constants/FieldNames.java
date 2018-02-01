@@ -21,6 +21,7 @@ public final class FieldNames {
     public static final String PARENT = "parent";
     public static final String STATUS = "status";
     public static final String LAST_MODIFIED = "last-modified";
+    public static final String INGREDIENT_COUNT = "ingredient-count";
 
     private FieldNames() {
         throw new AssertionError("Constants class not to be constructed!");
