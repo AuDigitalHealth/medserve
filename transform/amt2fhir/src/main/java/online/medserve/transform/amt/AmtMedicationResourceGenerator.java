@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hl7.fhir.dstu3.model.Annotation;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
@@ -48,6 +50,9 @@ import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.MedicationSourceExtension;
 import online.medserve.extension.ParentExtendedElement;
+import online.medserve.extension.ResourceReplacedExtension;
+import online.medserve.extension.ResourceReplacementExtension;
+import online.medserve.extension.ResourceWithHistoricalAssociations;
 import online.medserve.extension.SubsidyExtension;
 import online.medserve.transform.amt.cache.AmtCache;
 import online.medserve.transform.amt.cache.PbsCodeSystemUtil;
@@ -117,6 +122,8 @@ public class AmtMedicationResourceGenerator {
             ExtendedSubstance substance = new ExtendedSubstance();
             setStandardResourceElements(concept, substance);
 
+            addHistoicalAssociations(concept, substance, "Substance");
+
             substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
 
             substance.setCode(concept.toCodeableConcept());
@@ -137,6 +144,8 @@ public class AmtMedicationResourceGenerator {
             new MedicationSourceExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
                 new StringType(amtVersion)));
         setStandardResourceElements(concept, medication);
+
+        addHistoicalAssociations(concept, medication, "Medication");
 
         medication.setLastModified(new DateType(concept.getLastModified()));
 
@@ -186,6 +195,25 @@ public class AmtMedicationResourceGenerator {
         return medication;
     }
 
+    private void addHistoicalAssociations(Concept concept, ResourceWithHistoricalAssociations resource,
+            String resourceType) {
+        if (concept.getReplacementConcept() != null) {
+            for (ImmutableTriple<Long, Concept, Date> replacement : concept.getReplacementConcept()) {
+                resource.getReplacementResources()
+                    .add(new ResourceReplacementExtension(toReference(replacement.middle, resourceType),
+                        AmtConcept.fromId(replacement.left).toCoding(), new DateType(replacement.right)));
+            }
+        }
+
+        if (concept.getReplacedConcept() != null) {
+            for (ImmutableTriple<Long, Concept, Date> replaced : concept.getReplacedConcept()) {
+                resource.getReplacedResources()
+                    .add(new ResourceReplacedExtension(toReference(replaced.middle, "Substance"),
+                        AmtConcept.fromId(replaced.left).toCoding(), new DateType(replaced.right)));
+            }
+        }
+    }
+
     private void setStandardResourceElements(Concept concept, DomainResource resource) {
         resource.setId(Long.toString(concept.getId()));
         Narrative narrative = new Narrative();
@@ -209,6 +237,8 @@ public class AmtMedicationResourceGenerator {
                     extension.setMedicationResourceStatus(
                         new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), parent.getStatus()));
                     extension.setLastModified(new DateType(parent.getLastModified()));
+
+                    addHistoicalAssociations(concept, extension, "Substance");
 
                     addedConcepts.add(parent.getId());
                     addParentExtensions(parent, extension, addedConcepts, createdResources);
@@ -482,6 +512,8 @@ public class AmtMedicationResourceGenerator {
         reference.setMedicationResourceStatus(
             new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
         reference.setLastModified(new DateType(concept.getLastModified()));
+
+        addHistoicalAssociations(concept, reference, "Substance");
 
         return reference;
     }

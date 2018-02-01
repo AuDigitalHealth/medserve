@@ -207,6 +207,7 @@ public class AmtCache {
         FileUtils.readFile(visitor.getLanguageRefsetFile(), s -> handleLanguageRefsetRow(s), true, "\t");
         FileUtils.readFile(visitor.getDescriptionFile(), s -> handleDescriptionRow(s), true, "\t");
         FileUtils.readFile(visitor.getArtgIdRefsetFile(), s -> handleArtgIdRefsetRow(s), true, "\t");
+        FileUtils.readFile(visitor.getAssociationRefsetFile(), s -> handleAssociationRefsetRow(s), true, "\t");
 
         for (Path file : visitor.getDatatypePropertyFiles()) {
             FileUtils.readFile(file, s -> handleDatatypeRefsetRow(s), true, "\t");
@@ -418,6 +419,20 @@ public class AmtCache {
             artgIds.add(row[6]);
             artgIdCache.put(conceptId, artgIds);
             concept.updateLastModified(parseDate(row[1]));
+        }
+    }
+
+    private void handleAssociationRefsetRow(String[] row) {
+        Concept source = conceptCache.get(Long.parseLong(row[5]));
+        Concept target = conceptCache.get(Long.parseLong(row[6]));
+        if (isActive(row) && isAmtModule(row) && source != null && target != null) {
+            long type = Long.parseLong(row[4]);
+            Date effectiveTime = parseDate(row[1]);
+
+            source.addReplacementConcept(type, target, effectiveTime);
+            target.addReplacedConcept(type, source, effectiveTime);
+
+            source.updateLastModified(effectiveTime);
         }
     }
 

@@ -9,7 +9,8 @@ import java.util.Set;
 
 class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
 
-    private Path conceptFile, relationshipFile, descriptionFile, languageRefsetFile, artgIdRefsetFile;
+    private Path conceptFile, relationshipFile, descriptionFile, languageRefsetFile, artgIdRefsetFile,
+            associationRefsetFile;
     private Set<Path> datatypePropertyFiles = new HashSet<Path>();
 
     @Override
@@ -31,6 +32,8 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
                     || fileName.startsWith("der2_ccsRefset_UnitOfUseQuantitySnapshot_AU1000036")
                     || fileName.startsWith("der2_cciRefset_SubpackQuantitySnapshot_AU1000036")) {
                 datatypePropertyFiles.add(file);
+            } else if (fileName.startsWith("der2_cRefset_AssociationReferenceSnapshot_AU1000036")) {
+                associationRefsetFile = file;
             }
         }
         return FileVisitResult.CONTINUE;
@@ -58,6 +61,10 @@ class TerminologyFileVisitor extends SimpleFileVisitor<Path> {
 
     public Path getArtgIdRefsetFile() {
         return artgIdRefsetFile;
+    }
+
+    public Path getAssociationRefsetFile() {
+        return associationRefsetFile;
     }
 
 }

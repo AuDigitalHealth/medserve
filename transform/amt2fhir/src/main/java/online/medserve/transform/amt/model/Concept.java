@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
@@ -34,6 +35,8 @@ public class Concept {
     private Date conceptLastModified;
     private Set<Subsidy> subsidies = new HashSet<>();
     private Manufacturer manufacturer;
+    private List<ImmutableTriple<Long, Concept, Date>> replacementConcepts;
+    private List<ImmutableTriple<Long, Concept, Date>> replacedConcepts;
 
     public Concept(long id, boolean active, Date conceptLastModified) {
         this.id = id;
@@ -271,6 +274,28 @@ public class Concept {
 
     public MedicationStatus getStatus() {
         return active ? MedicationStatus.ACTIVE : MedicationStatus.ENTEREDINERROR;
+    }
+
+    public void addReplacementConcept(long type, Concept replacement, Date date) {
+        if (replacementConcepts == null) {
+            replacementConcepts = new ArrayList<>();
+        }
+        replacementConcepts.add(new ImmutableTriple<Long, Concept, Date>(type, replacement, date));
+    }
+
+    public void addReplacedConcept(long type, Concept retiredConcept, Date date) {
+        if (replacedConcepts == null) {
+            replacedConcepts = new ArrayList<>();
+        }
+        replacedConcepts.add(new ImmutableTriple<Long, Concept, Date>(type, retiredConcept, date));
+    }
+
+    public List<ImmutableTriple<Long, Concept, Date>> getReplacementConcept() {
+        return replacementConcepts;
+    }
+
+    public List<ImmutableTriple<Long, Concept, Date>> getReplacedConcept() {
+        return replacedConcepts;
     }
 
 }

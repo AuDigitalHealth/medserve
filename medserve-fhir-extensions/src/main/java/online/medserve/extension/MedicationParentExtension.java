@@ -18,7 +18,8 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.util.ElementUtil;
 
 @Block
-public class MedicationParentExtension extends BackboneElement implements ParentExtendedElement {
+public class MedicationParentExtension extends BackboneElement
+        implements ParentExtendedElement, ResourceWithHistoricalAssociations {
 
     private static final long serialVersionUID = 1L;
 
@@ -65,13 +66,31 @@ public class MedicationParentExtension extends BackboneElement implements Parent
     private DateType lastModified;
 
     /**
+     * Replacement resources for this resource
+     */
+    @Child(name = "replacementResources", min = 1, max = 1, summary = false)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/replacementResources", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Replacement resources for this resource")
+    private List<ResourceReplacementExtension> replacementResources;
+
+    /**
+     * Resources that this resource has replaced
+     */
+    @Child(name = "replacedResources", min = 1, max = 1, summary = false)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/replacedResources", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "Resources that this resource has replaced")
+    private List<ResourceReplacedExtension> replacedResources;
+
+    /**
      * It is important to override the isEmpty() method, adding a check for any newly added fields.
      */
     @Override
     public boolean isEmpty() {
         return super.isEmpty()
                 && ElementUtil.isEmpty(parentMedication, medicationResourceType, parentMedicationResources,
-                    medicationResourceStatus, lastModified);
+                    medicationResourceStatus, lastModified, replacementResources, replacedResources);
     }
 
     public Reference getParentMedication() {
@@ -120,6 +139,12 @@ public class MedicationParentExtension extends BackboneElement implements Parent
         copy.parentMedication = parentMedication;
         copy.medicationResourceType = medicationResourceType;
         copy.medicationResourceStatus = medicationResourceStatus;
+        copy.parentMedicationResources = parentMedicationResources;
+        copy.lastModified = lastModified;
+        copy.replacementResources = new ArrayList<>();
+        copy.replacementResources.addAll(replacementResources);
+        copy.replacedResources = new ArrayList<>();
+        copy.replacedResources.addAll(replacedResources);
         return copy;
     }
 
@@ -140,6 +165,32 @@ public class MedicationParentExtension extends BackboneElement implements Parent
 
     public void setLastModified(DateType lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    public List<ResourceReplacementExtension> getReplacementResources() {
+        if (replacementResources == null) {
+            replacementResources = new ArrayList<>();
+        }
+        return replacementResources;
+    }
+
+    @Override
+    public void setReplacementResources(List<ResourceReplacementExtension> replacementResources) {
+        this.replacementResources = replacementResources;
+    }
+
+    @Override
+    public List<ResourceReplacedExtension> getReplacedResources() {
+        if (replacedResources == null) {
+            replacedResources = new ArrayList<>();
+        }
+        return replacedResources;
+    }
+
+    @Override
+    public void setReplacedResources(List<ResourceReplacedExtension> replacedResources) {
+        this.replacedResources = replacedResources;
     }
 
 }
