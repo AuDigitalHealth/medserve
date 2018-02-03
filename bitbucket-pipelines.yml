@@ -6,7 +6,6 @@
 image: maven:3.3.9
 
 options:
-  docker: true
   size: 2x
   
 pipelines:    
