@@ -11,33 +11,33 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.util.ElementUtil;
 
 @Block
-public class MedicationSourceExtension extends BackboneElement {
+public class SourceCodeSystemExtension extends BackboneElement {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * URI of the code system that was the source of this {@link ExtendedMedication} resource.
+     * URI of the code system that was the source of this resource.
      */
     @Child(name = "uri", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
             + "StructureDefinition/sourceCodeSystemUri", definedLocally = false, isModifier = false)
-    @Description(shortDefinition = "URI of the code system that was the source of this {@link ExtendedMedication} resource.")
+    @Description(shortDefinition = "URI of the code system that was the source of this resource.")
     private UriType uri;
 
     /**
-     * Version of the code system that was the source of this {@link ExtendedMedication} resource.
+     * Version of the code system that was the source of this resource.
      */
     @Child(name = "version", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
             + "StructureDefinition/sourceCodeSystemVersion", definedLocally = false, isModifier = false)
-    @Description(shortDefinition = "Version of the code system that was the source of this {@link ExtendedMedication} resource.")
+    @Description(shortDefinition = "Version of the code system that was the source of this resource.")
     private StringType version;
 
-    public MedicationSourceExtension() {
+    public SourceCodeSystemExtension() {
         super();
     }
 
-    public MedicationSourceExtension(UriType uri, StringType version) {
+    public SourceCodeSystemExtension(UriType uri, StringType version) {
         super();
         this.uri = uri;
         this.version = version;
@@ -53,8 +53,8 @@ public class MedicationSourceExtension extends BackboneElement {
     }
 
     @Override
-    public MedicationSourceExtension copy() {
-        MedicationSourceExtension copy = new MedicationSourceExtension();
+    public SourceCodeSystemExtension copy() {
+        SourceCodeSystemExtension copy = new SourceCodeSystemExtension();
         copy.uri = uri;
         copy.version = version;
         return copy;

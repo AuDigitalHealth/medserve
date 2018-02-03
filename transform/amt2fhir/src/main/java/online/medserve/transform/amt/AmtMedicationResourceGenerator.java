@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -49,10 +50,10 @@ import online.medserve.extension.ExtendedSubstance;
 import online.medserve.extension.IsReplacedByExtension;
 import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
-import online.medserve.extension.MedicationSourceExtension;
 import online.medserve.extension.ParentExtendedElement;
 import online.medserve.extension.ReplacesResourceExtension;
 import online.medserve.extension.ResourceWithHistoricalAssociations;
+import online.medserve.extension.SourceCodeSystemExtension;
 import online.medserve.extension.SubsidyExtension;
 import online.medserve.transform.amt.cache.AmtCache;
 import online.medserve.transform.amt.cache.PbsCodeSystemUtil;
@@ -97,22 +98,42 @@ public class AmtMedicationResourceGenerator {
     }
 
     public void process(MedicationResourceProcessor processor) throws IOException {
+        processConceptList(conceptCache.getCtpps(), "CTPP", processor);
+
+        logger.info("Mopping up concepts unreferenced by CTPPs");
+
+        processConceptList(conceptCache.getTpps(), "TPP", processor);
+        processConceptList(conceptCache.getMpps(), "MPP", processor);
+        processConceptList(conceptCache.getTpuus(), "TPUU", processor);
+        processConceptList(conceptCache.getMpuus(), "MPUU", processor);
+        processConceptList(conceptCache.getMps(), "MP", processor);
+        processConceptList(conceptCache.getSubstances(), "Substance", processor);
+
+        logger.info("Finished creating " + processedConcepts.size() + " resources");
+    }
+
+    private void processConceptList(Map<Long, Concept> conceptList, String conceptType,
+            MedicationResourceProcessor processor)
+            throws IOException {
+        logger.info("Processing " + conceptList.size() + " " + conceptType + " concepts");
+
         List<Resource> createdResources = new ArrayList<>();
-        logger.info("Processing " + conceptCache.getCtpps().size() + " CTPPs");
+        int processedConceptsStartingSize = processedConcepts.size();
         int counter = 0;
-        for (Concept ctpp : conceptCache.getCtpps().values()) {
+        for (Concept concept : conceptCache.getCtpps().values()) {
             counter++;
             createdResources.clear();
-            if (!processedConcepts.contains(Long.toString(ctpp.getId()))) {
-                createPackageResource(ctpp, createdResources);
+            if (!processedConcepts.contains(Long.toString(concept.getId()))) {
+                createPackageResource(concept, createdResources);
                 processor.processResources(createdResources);
             }
             if (counter % 1000 == 0) {
-                logger.info("Processed " + counter + " CTPPs...");
+                logger.info("Processed " + counter + " " + conceptType + "s...");
             }
         }
 
-        logger.info("Completed processing " + conceptCache.getCtpps().size() + " CTPPs");
+        logger.info("Completed processing " + conceptList.size() + " " + conceptType + "s, added "
+                + (processedConcepts.size() - processedConceptsStartingSize) + " resources");
     }
 
     private Reference createSubstanceResource(Concept concept, List<Resource> createdResources) {
@@ -121,7 +142,9 @@ public class AmtMedicationResourceGenerator {
             processedConcepts.add(Long.toString(concept.getId()));
             ExtendedSubstance substance = new ExtendedSubstance();
             setStandardResourceElements(concept, substance);
-
+            substance.setSourceCodeSystem(
+                new SourceCodeSystemExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
+                    new StringType(amtVersion)));
             addHistoicalAssociations(concept, substance, "Substance");
 
             substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
@@ -141,7 +164,7 @@ public class AmtMedicationResourceGenerator {
     private ExtendedMedication createBaseMedicationResource(Concept concept, List<Resource> createdResources) {
         ExtendedMedication medication = new ExtendedMedication();
         medication.setSourceCodeSystem(
-            new MedicationSourceExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
+            new SourceCodeSystemExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
                 new StringType(amtVersion)));
         setStandardResourceElements(concept, medication);
 
