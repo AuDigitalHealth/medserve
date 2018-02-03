@@ -53,7 +53,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     @Extension(url = PROFILE_URL_BASE
             + "StructureDefinition/sourceCodeSystem", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "The code system that was the source of this {@link ExtendedMedication} resource.")
-    private MedicationSourceExtension sourceCodeSystem;
+    private SourceCodeSystemExtension sourceCodeSystem;
 
     /**
      * Subsidy
@@ -143,11 +143,11 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
         this.subsidies.add(subsidy);
     }
 
-    public MedicationSourceExtension getSourceCodeSystem() {
+    public SourceCodeSystemExtension getSourceCodeSystem() {
         return sourceCodeSystem;
     }
 
-    public void setSourceCodeSystem(MedicationSourceExtension sourceCodeSystem) {
+    public void setSourceCodeSystem(SourceCodeSystemExtension sourceCodeSystem) {
         this.sourceCodeSystem = sourceCodeSystem;
     }
 

@@ -49,10 +49,10 @@ import online.medserve.extension.ExtendedSubstance;
 import online.medserve.extension.IsReplacedByExtension;
 import online.medserve.extension.MedicationIngredientComponentExtension;
 import online.medserve.extension.MedicationParentExtension;
-import online.medserve.extension.MedicationSourceExtension;
 import online.medserve.extension.ParentExtendedElement;
 import online.medserve.extension.ReplacesResourceExtension;
 import online.medserve.extension.ResourceWithHistoricalAssociations;
+import online.medserve.extension.SourceCodeSystemExtension;
 import online.medserve.extension.SubsidyExtension;
 import online.medserve.transform.amt.cache.AmtCache;
 import online.medserve.transform.amt.cache.PbsCodeSystemUtil;
@@ -121,7 +121,9 @@ public class AmtMedicationResourceGenerator {
             processedConcepts.add(Long.toString(concept.getId()));
             ExtendedSubstance substance = new ExtendedSubstance();
             setStandardResourceElements(concept, substance);
-
+            substance.setSourceCodeSystem(
+                new SourceCodeSystemExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
+                    new StringType(amtVersion)));
             addHistoicalAssociations(concept, substance, "Substance");
 
             substance.setStatus(concept.isActive() ? FHIRSubstanceStatus.ACTIVE : FHIRSubstanceStatus.ENTEREDINERROR);
@@ -141,7 +143,7 @@ public class AmtMedicationResourceGenerator {
     private ExtendedMedication createBaseMedicationResource(Concept concept, List<Resource> createdResources) {
         ExtendedMedication medication = new ExtendedMedication();
         medication.setSourceCodeSystem(
-            new MedicationSourceExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
+            new SourceCodeSystemExtension(new UriType(FhirCodeSystemUri.SNOMED_CT_SYSTEM_URI.getUri()),
                 new StringType(amtVersion)));
         setStandardResourceElements(concept, medication);
 

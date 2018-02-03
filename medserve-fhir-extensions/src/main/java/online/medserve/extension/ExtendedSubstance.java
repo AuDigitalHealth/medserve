@@ -46,9 +46,19 @@ public class ExtendedSubstance extends Substance implements IBaseResource, Resou
     @Description(shortDefinition = "Resources that this resource has replaced")
     private List<ReplacesResourceExtension> replacesResources;
 
+    /**
+     * The code system that was the source of this {@link ExtendedMedication} resource.
+     */
+    @Child(name = "sourceCodeSystem", min = 1, max = 1, summary = false)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/sourceCodeSystem", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "The code system that was the source of this {@link ExtendedMedication} resource.")
+    private SourceCodeSystemExtension sourceCodeSystem;
+
     @Override
     public boolean isEmpty() {
-        return super.isEmpty() && ElementUtil.isEmpty(lastModified, isReplacedByResources, replacesResources);
+        return super.isEmpty()
+                && ElementUtil.isEmpty(lastModified, isReplacedByResources, replacesResources, sourceCodeSystem);
     }
 
     public DateType getLastModified() {
@@ -60,6 +70,14 @@ public class ExtendedSubstance extends Substance implements IBaseResource, Resou
 
     public void setLastModified(DateType lastModified) {
         this.lastModified = lastModified;
+    }
+
+    public SourceCodeSystemExtension getSourceCodeSystem() {
+        return sourceCodeSystem;
+    }
+
+    public void setSourceCodeSystem(SourceCodeSystemExtension sourceCodeSystem) {
+        this.sourceCodeSystem = sourceCodeSystem;
     }
 
     /*
