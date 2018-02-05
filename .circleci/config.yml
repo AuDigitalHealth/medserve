@@ -24,11 +24,12 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: mvn -s settings.xml -B deploy -Dsynd.cache.dir=$CIRCLE_WORKING_DIRECTORY/terminology 
+      - run: mkdir -p ~/terminology 
+      - run: mvn -s settings.xml -B clean deploy -Dsynd.cache.dir=~/terminology 
 
       - save_cache:
           paths:
             - ~/.m2
-            - $CIRCLE_WORKING_DIRECTORY/terminology
+            - ~/terminology
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
