@@ -24,16 +24,11 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: mvn -s settings.xml -B deploy -Dsynd.cache.dir=~/terminology 
-#          environment:
-#            SYND_CLIENT_ID: $SYND_CLIENT_ID
-#            SYND_CLIENT_SECRET: $SYND_CLIENT_SECRET
-#            DOCKER_USERNAME: $DOCKER_USERNAME
-#            DOCKER_PASSWORD: $DOCKER_PASSWORD
+      - run: mvn -s settings.xml -B deploy -Dsynd.cache.dir=$CIRCLE_WORKING_DIRECTORY/terminology 
 
       - save_cache:
           paths:
             - ~/.m2
-            - ~/terminology
+            - $CIRCLE_WORKING_DIRECTORY/terminology
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
