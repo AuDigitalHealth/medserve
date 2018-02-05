@@ -25,11 +25,11 @@ jobs:
           - v1-dependencies-
 
       - run: mvn -s settings.xml -B deploy -Dsynd.cache.dir=~/terminology 
-          environment:
-            SYND_CLIENT_ID: $SYND_CLIENT_ID
-            SYND_CLIENT_SECRET: $SYND_CLIENT_SECRET
-            DOCKER_USERNAME: $DOCKER_USERNAME
-            DOCKER_PASSWORD: $DOCKER_PASSWORD
+#          environment:
+#            SYND_CLIENT_ID: $SYND_CLIENT_ID
+#            SYND_CLIENT_SECRET: $SYND_CLIENT_SECRET
+#            DOCKER_USERNAME: $DOCKER_USERNAME
+#            DOCKER_PASSWORD: $DOCKER_PASSWORD
 
       - save_cache:
           paths:
