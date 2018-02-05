@@ -16,9 +16,11 @@ pipelines:
             - maven
             - terminology
           script:
-            - mkdir -p $BITBUCKET_CLONE_DIR/terminology
-            - mvn dependency:go-offline -DexcludeGroupIds=com.github.dionmcm*
-            - mvn -s settings.xml -B deploy -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
+            - docker login -p $DOCKER_PASSWORD -u $DOCKER_USERNAME
+            - mvn -B deploy -P '!docker' -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
+            - cd server
+            - docker-compose build
+            - docker-compose push 
             - ssh root@medserve.online 'docker-compose pull medserve proxy; docker-compose create medserve proxy; docker-compose up -d'
           services:
             - docker
