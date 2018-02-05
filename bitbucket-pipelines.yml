@@ -17,6 +17,7 @@ pipelines:
             - terminology
           script:
             - mkdir -p $BITBUCKET_CLONE_DIR/terminology
+            - mvn dependency:go-offline
             - mvn -s settings.xml -B deploy -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
             - ssh root@medserve.online 'docker-compose pull medserve proxy; docker-compose create medserve proxy; docker-compose up -d'
           services:
