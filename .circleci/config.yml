@@ -33,7 +33,7 @@ jobs:
 
       - run: mkdir -p $HOME/terminology 
       - run: mvn -s settings.xml -B clean deploy -P '!docker' -Dsynd.cache.dir=$HOME/terminology 
-      - run: docker login -p $DOCKER_USERNAME -u $DOCKER_PASSWORD
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       - run: |
           cd server
           docker-compose build

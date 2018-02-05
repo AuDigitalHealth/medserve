@@ -18,13 +18,13 @@ pipelines:
           script:
             - docker login -p $DOCKER_PASSWORD -u $DOCKER_USERNAME
             - mvn -B deploy -P '!docker' -Dsynd.cache.dir=$BITBUCKET_CLONE_DIR/terminology
-          i - export DOCKER_COMPOSE_VERSION=1.18.0
-            - export DOCKER_COPOSE_URL=https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)
-            - curl -L $DOCKER_COPOSE_URL > docker-compose
-            - chmod +x docker-compose
-            - cd server
-            - docker-compose build
-            - docker-compose push 
+            - cd server/fhir-server
+            - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+            - docker build --tag dionmcm/medserve .
+            - docker push dionmcm/medserve
+            - cd ../medserve-proxy
+            - docker build --tag dionmcm/medserve-proxy .
+            - docker push dionmcm/medserve-proxy
             - ssh root@medserve.online 'docker-compose pull medserve proxy; docker-compose create medserve proxy; docker-compose up -d'
           services:
             - docker
