@@ -38,6 +38,8 @@ jobs:
           cd server
           docker-compose build
           docker-compose push
+      - run: scp docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:~
+      - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'docker-compose pull medserve proxy; docker-compose create medserve proxy; docker-compose up -d'
 
       - save_cache:
           paths:
