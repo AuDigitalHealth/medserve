@@ -20,7 +20,10 @@ jobs:
     
     steps:
       - checkout
-
+      - add_ssh_keys
+      - run:
+          name: Keyscan Github (HACK)
+          command: ssh-keyscan -H medserve.online >> ~/.ssh/known_hosts
       # Download and cache dependencies
       - restore_cache:
           keys:
