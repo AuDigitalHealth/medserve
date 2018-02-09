@@ -44,7 +44,7 @@
 						</executions>
 						<configuration>
 							<useMavenSettingsForAuth>true</useMavenSettingsForAuth>
-							<repository>dionmcm/medserve</repository>
+							<repository>dionmcm/medserve-proxy</repository>
 							<tag>${dockerTag}</tag>
 						</configuration>
 					</plugin>
