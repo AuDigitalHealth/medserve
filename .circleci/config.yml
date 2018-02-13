@@ -23,7 +23,8 @@ jobs:
       - add_ssh_keys
       - run:
           name: Keyscan Github (HACK)
-          command: ssh-keyscan -H medserve.online >> ~/.ssh/known_hosts
+          # added mkdir to work with circleci CLI
+          command: mkdir -p ~/.ssh && ssh-keyscan -H medserve.online >> ~/.ssh/known_hosts
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -42,7 +43,10 @@ jobs:
           docker-compose build
           docker-compose push
       - run: scp server/docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:~
-      - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'docker-compose pull medserve proxy; docker-compose create medserve proxy; docker-compose up -d'
+        # The line below creates directories referenced in the docker-compose.yml so docker-compose doesn't fall
+        # over when using the same compose file to start the services as was used to build them
+      - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'mkdir -p ~/fhir-server && mkdir -p ~/medserve-proxy'
+      - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'docker-compose --no-build pull medserve proxy && docker-compose --no-build create medserve proxy && docker-compose --no-build up -d'
 
       - save_cache:
           paths:
