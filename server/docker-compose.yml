@@ -7,15 +7,16 @@ services:
     expose:
       - "8080"
     environment:
-      MEDSERVE_FHIR_BASE: https://medserve.online/fhir
-      SENTRY_DSN: ${SENTRY_DSN}
+      MEDSERVE_FHIR_BASE: ${MEDSERVE_FHIR_BASE}
+      SENTRY_DSN: ${MEDSERVE_SENTRY_DSN}
     restart: unless-stopped
   polecat:
     image: johngrimes/polecat
     expose:
       - "80"
     environment:
-      POLECAT_FHIR_SERVER: https://medserve.online/fhir
+      POLECAT_FHIR_SERVER: ${MEDSERVE_FHIR_BASE}
+      POLECAT_SENTRY_DSN: ${POLECAT_SENTRY_DSN}
     restart: unless-stopped
   proxy:
     build: medserve-proxy

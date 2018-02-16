@@ -43,6 +43,7 @@ jobs:
           docker-compose push
       - run: scp server/docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:~
       - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'mkdir -pv fhir-server medserve-proxy'
+      - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'cat "MEDSERVE_SENTRY_DSN=$MEDSERVE_SENTRY_DSN\nPOLECAT_SENTRY_DSN=$POLECAT_SENTRY_DSN\nMEDSERVE_FHIR_BASE=$MEDSERVE_FHIR_BASE\n" > .env'
       - run: ssh $DEPLOY_USER@$DEPLOY_HOST 'docker-compose pull medserve proxy; docker-compose create medserve proxy; docker-compose up -d'
 
       - save_cache:
