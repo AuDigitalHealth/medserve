@@ -35,8 +35,8 @@ import org.hl7.fhir.exceptions.FHIRException;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import online.medserve.extension.ExtendedMedication;
+import online.medserve.extension.ExtendedMedicationReference;
 import online.medserve.extension.ExtendedSubstance;
-import online.medserve.extension.MedicationParentExtension;
 import online.medserve.extension.ParentExtendedElement;
 import online.medserve.extension.SubsidyExtension;
 import online.medserve.server.indexbuilder.constants.FieldNames;
@@ -63,7 +63,7 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
     }
 
     @Override
-    public void processResources(List<? extends Resource> resources) throws IOException {
+    public synchronized void processResources(List<? extends Resource> resources) throws IOException {
         for (Resource resource : resources) {
             Document document = new Document();
 
@@ -76,6 +76,8 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
 
             if (resource instanceof ExtendedMedication) {
                 indextMedicationResource(resource, document);
+                // System.out
+                // .println("ZZZZZZZZZZZZZZz wrote out " + ((ExtendedMedication) resource).getText().getDivAsString());
             } else if (resource instanceof Substance) {
                 ExtendedSubstance substance = ExtendedSubstance.class.cast(resource);
                 document.add(
@@ -83,13 +85,15 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
                 document.add(
                     new StringField(FieldNames.LAST_MODIFIED, substance.getLastModified().asStringValue(), Store.NO));
                 indexCodeableConcept(document, substance.getCode(), FieldNames.CODE);
+                // System.out.println("ZZZZZZZZZZZZZZz wrote out " + substance.getText().getDivAsString());
             } else if (resource instanceof Organization) {
                 // nothing special here
+                // System.out.println("ZZZZZZZZZZZZZZz wrote out " + ((Organization)
+                // resource).getText().getDivAsString());
             } else {
                 throw new RuntimeException("Unknown resource type " + resource.getClass().getCanonicalName());
             }
             document.add(new StoredField(FieldNames.JSON, parser.encodeResourceToString(resource)));
-
             writer.addDocument(document);
         }
         writer.commit();
@@ -164,7 +168,7 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
 
                             cacheIngredient(resource.getId(), ingredientReference);
                         }
-                        
+
                     } catch (FHIRException e) {
                         throw new RuntimeException("Cannot get reference for package-item " + content);
                     }
@@ -202,10 +206,9 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
     }
 
     private void indexParents(Document document, ParentExtendedElement medication, String fieldName) {
-        for (MedicationParentExtension parent : medication.getParentMedicationResources()) {
+        for (ExtendedMedicationReference parent : medication.getParentMedicationResources()) {
             try {
-                indexReference(document, parent.getParentMedication(), fieldName,
-                    ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
+                indexReference(document, parent, fieldName, ResourceTypes.MEDICATION_RESOURCE_TYPE_VALUE);
                 if (fieldName.equals(FieldNames.ANCESTOR)) {
                     indexParents(document, parent, fieldName);
                 }

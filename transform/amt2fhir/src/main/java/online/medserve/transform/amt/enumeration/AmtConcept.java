@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import org.hl7.fhir.dstu3.model.Coding;
 
-import online.medserve.transform.util.FhirCodeSystemUri;
+import online.medserve.FhirCodeSystemUri;
 
 public enum AmtConcept {
     // @formatter:off

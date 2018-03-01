@@ -13,18 +13,18 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.model.api.annotation.ResourceDef;
 import ca.uhn.fhir.util.ElementUtil;
 
-@ResourceDef(name = "Substance", id = "extendedSubstance", profile = ExtendedSubstance.PROFILE_URL_BASE
-        + "Profile/ExtendedMedication")
-public class ExtendedSubstance extends Substance implements IBaseResource, ResourceWithHistoricalAssociations {
+@ResourceDef(name = "ExtendedSubstance", id = "extendedSubstance", profile = ExtendedMedication.PROFILE_URL_BASE
+        + "Profile/ExtendedSubstance")
+public class ExtendedSubstance extends Substance implements IBaseResource, ElementWithHistoricalSubstanceReferences {
 
-    public static final String PROFILE_URL_BASE = "http://medserve.online/fhir/";
     private static final long serialVersionUID = 1L;
 
     /**
      * The date the underlying definition of the concept or its descriptions were last changed.
      */
     @Child(name = "lastModified", min = 1, max = 1, summary = false)
-    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/lastModified", definedLocally = false, isModifier = false)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/lastModified", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "The date the underlying definition of the concept or its descriptions were last changed.")
     private DateType lastModified;
 
@@ -33,25 +33,25 @@ public class ExtendedSubstance extends Substance implements IBaseResource, Resou
      */
     @Child(name = "isReplacedByResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/isReplacedByResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/isReplacedByResources", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "Replacement resources for this resource")
-    private List<IsReplacedByExtension> isReplacedByResources;
+    private List<ExtendedSubstanceReference> isReplacedByResources;
 
     /**
      * Resources that this resource has replaced
      */
     @Child(name = "replacesResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/replacesResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/replacesResources", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "Resources that this resource has replaced")
-    private List<ReplacesResourceExtension> replacesResources;
+    private List<ExtendedSubstanceReference> replacesResources;
 
     /**
      * The code system that was the source of this {@link ExtendedMedication} resource.
      */
     @Child(name = "sourceCodeSystem", min = 1, max = 1, summary = false)
-    @Extension(url = PROFILE_URL_BASE
-            + "StructureDefinition/sourceCodeSystem", definedLocally = false, isModifier = false)
+    @Extension(url = ExtendedMedication.PROFILE_URL_BASE
+            + "StructureDefinition/sourceCodeSystem", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "The code system that was the source of this {@link ExtendedMedication} resource.")
     private SourceCodeSystemExtension sourceCodeSystem;
 
@@ -80,49 +80,34 @@ public class ExtendedSubstance extends Substance implements IBaseResource, Resou
         this.sourceCodeSystem = sourceCodeSystem;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#getReplacementResources()
+    /* (non-Javadoc)
+     * @see online.medserve.extension.ElementWithHistoricalSubstanceReferences#getIsReplacedByResources()
      */
     @Override
-    public List<IsReplacedByExtension> getReplacementResources() {
+    public List<ExtendedSubstanceReference> getIsReplacedByResources() {
         if (isReplacedByResources == null) {
             isReplacedByResources = new ArrayList<>();
         }
         return isReplacedByResources;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#setReplacementResources(java.util.List)
-     */
-    @Override
-    public void setReplacementResources(List<IsReplacedByExtension> isReplacedByResources) {
+    public void setIsReplacedByResources(List<ExtendedSubstanceReference> isReplacedByResources) {
         this.isReplacedByResources = isReplacedByResources;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#getReplacedResources()
+    /* (non-Javadoc)
+     * @see online.medserve.extension.ElementWithHistoricalSubstanceReferences#getReplacesResources()
      */
     @Override
-    public List<ReplacesResourceExtension> getReplacedResources() {
+    public List<ExtendedSubstanceReference> getReplacesResources() {
         if (replacesResources == null) {
             replacesResources = new ArrayList<>();
         }
         return replacesResources;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#setReplacedResources(java.util.List)
-     */
-    @Override
-    public void setReplacedResources(List<ReplacesResourceExtension> replacesResources) {
+    public void setReplacesResources(List<ExtendedSubstanceReference> replacesResources) {
         this.replacesResources = replacesResources;
     }
+
 }

@@ -20,6 +20,7 @@ import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenParam;
 import ca.uhn.fhir.rest.server.IResourceProvider;
+import online.medserve.extension.ExtendedSubstance;
 import online.medserve.server.bundleprovider.CodeSearchBundleProvider;
 import online.medserve.server.bundleprovider.TextSearchBundleProvider;
 import online.medserve.server.index.Index;
@@ -38,8 +39,8 @@ public class SubstanceResourceProvider implements IResourceProvider {
     }
 
     @Read()
-    public Substance getResourceById(@IdParam IdType theId) throws IOException {
-        return index.getResourceById(Substance.class, theId.getIdPart());
+    public ExtendedSubstance getResourceById(@IdParam IdType theId) throws IOException {
+        return index.getResourceById(ExtendedSubstance.class, theId.getIdPart());
     }
 
     @Search(type = Substance.class)

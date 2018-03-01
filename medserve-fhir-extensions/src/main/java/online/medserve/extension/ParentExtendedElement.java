@@ -1,14 +1,10 @@
 package online.medserve.extension;
 
 import java.util.Collection;
-import java.util.List;
 
 public interface ParentExtendedElement {
 
-    public Collection<MedicationParentExtension> getParentMedicationResources();
+    void addParentMedicationResource(ExtendedMedicationReference parentMedicationResource);
 
-    public void setParentMedicationResources(List<MedicationParentExtension> parentMedicationResources);
-
-    public void addParentMedicationResources(MedicationParentExtension parentMedicationResource);
-
+    public Collection<ExtendedMedicationReference> getParentMedicationResources();
 }

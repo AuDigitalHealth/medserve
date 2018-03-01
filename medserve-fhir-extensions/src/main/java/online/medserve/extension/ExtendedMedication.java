@@ -8,7 +8,6 @@ import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.DateType;
 import org.hl7.fhir.dstu3.model.Medication;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import ca.uhn.fhir.model.api.annotation.Child;
 import ca.uhn.fhir.model.api.annotation.Description;
@@ -16,25 +15,26 @@ import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.model.api.annotation.ResourceDef;
 import ca.uhn.fhir.util.ElementUtil;
 
-@ResourceDef(name = "Medication", id = "extendedMedication", profile = ExtendedMedication.PROFILE_URL_BASE
+@ResourceDef(name = "ExtendedMedication", id = "extendedMedication", profile = ExtendedMedication.PROFILE_URL_BASE
         + "Profile/ExtendedMedication")
-public class ExtendedMedication extends Medication implements IBaseResource, ParentExtendedElement, ResourceWithHistoricalAssociations {
+public class ExtendedMedication extends Medication
+        implements ParentExtendedElement, ElementWithHistoricalMedicationReferences {
 
     public static final String PROFILE_URL_BASE = "http://medserve.online/fhir/";
     private static final long serialVersionUID = 1L;
 
     @Child(name = "parentMedicationResources", min = 0, max = Child.MAX_UNLIMITED, summary = false)
     @Extension(url = PROFILE_URL_BASE
-            + "StructureDefinition/parentMedicationResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/parentMedicationResources", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "A collections of medication resources that represent an abstraction of this medication resource")
-    private List<MedicationParentExtension> parentMedicationResources;
+    private List<ExtendedMedicationReference> parentMedicationResources;
 
     /**
      * A code that indicates the level of abstraction of the medication
      */
     @Child(name = "medicationResourceType", min = 1, max = 1, summary = true)
     @Extension(url = PROFILE_URL_BASE
-            + "StructureDefinition/medicationResourceType", definedLocally = false, isModifier = false)
+            + "StructureDefinition/medicationResourceType", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "A code that indicates what level of abstraction the medication represents")
     private Coding medicationResourceType;
 
@@ -42,7 +42,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
      * A CodeableConcept for the medication brand
      */
     @Child(name = "brand", min = 0, max = 1, summary = false)
-    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/brand", definedLocally = false, isModifier = false)
+    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/brand", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "A CodeableConcept to identify the brand of the medication if it is branded")
     private CodeableConcept brand;
 
@@ -51,7 +51,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
      */
     @Child(name = "sourceCodeSystem", min = 1, max = 1, summary = false)
     @Extension(url = PROFILE_URL_BASE
-            + "StructureDefinition/sourceCodeSystem", definedLocally = false, isModifier = false)
+            + "StructureDefinition/sourceCodeSystem", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "The code system that was the source of this {@link ExtendedMedication} resource.")
     private SourceCodeSystemExtension sourceCodeSystem;
 
@@ -59,7 +59,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
      * Subsidy
      */
     @Child(name = "subsidies", min = 0, max = 1, summary = false)
-    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/subsidy", definedLocally = false, isModifier = false)
+    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/subsidy", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "An extension which captures subsidy coding and associated information for this Medication ")
     private List<SubsidyExtension> subsidies;
 
@@ -67,7 +67,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
      * The date the underlying definition of the concept or its descriptions were last changed.
      */
     @Child(name = "lastModified", min = 1, max = 1, summary = false)
-    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/lastModified", definedLocally = false, isModifier = false)
+    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/lastModified", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "The date the underlying definition of the concept or its descriptions were last changed.")
     private DateType lastModified;
 
@@ -76,18 +76,18 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
      */
     @Child(name = "isReplacedByResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/isReplacedByResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/isReplacedByResources", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "Replacement resources for this resource")
-    private List<IsReplacedByExtension> isReplacedByResources;
+    private List<ExtendedMedicationReference> isReplacedByResources;
 
     /**
      * Resources that this resource has replaced
      */
     @Child(name = "replacesResources", min = 1, max = 1, summary = false)
     @Extension(url = ExtendedMedication.PROFILE_URL_BASE
-            + "StructureDefinition/replacesResources", definedLocally = false, isModifier = false)
+            + "StructureDefinition/replacesResources", definedLocally = true, isModifier = false)
     @Description(shortDefinition = "Resources that this resource has replaced")
-    private List<ReplacesResourceExtension> replacesResources;
+    private List<ExtendedMedicationReference> replacesResources;
 
     @Override
     public boolean isEmpty() {
@@ -95,21 +95,29 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
             sourceCodeSystem, subsidies, lastModified, isReplacedByResources, replacesResources);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see online.medserve.extension.ParentExtendedElement#addParentMedicationResources(online.medserve.extension.
+     * ExtendedMedicationReference)
+     */
     @Override
-    public Collection<MedicationParentExtension> getParentMedicationResources() {
+    public Collection<ExtendedMedicationReference> getParentMedicationResources() {
         if (parentMedicationResources == null) {
             parentMedicationResources = new ArrayList<>();
         }
         return parentMedicationResources;
     }
 
-    @Override
-    public void setParentMedicationResources(List<MedicationParentExtension> parentMedicationResources) {
+    public void setParentMedicationResources(List<ExtendedMedicationReference> parentMedicationResources) {
         this.parentMedicationResources = parentMedicationResources;
     }
 
+    /* (non-Javadoc)
+     * @see online.medserve.extension.ParentExtendedElement#addParentMedicationResources(online.medserve.extension.ExtendedMedicationReference)
+     */
     @Override
-    public void addParentMedicationResources(MedicationParentExtension parentMedicationResource) {
+    public void addParentMedicationResource(ExtendedMedicationReference parentMedicationResource) {
         getParentMedicationResources().add(parentMedicationResource);
     }
 
@@ -163,41 +171,33 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     }
 
     /* (non-Javadoc)
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#getReplacementResources()
+     * @see online.medserve.extension.ElementWithHistoricalMedicationReferences#getIsReplacedByResources()
      */
     @Override
-    public List<IsReplacedByExtension> getReplacementResources() {
+    public List<ExtendedMedicationReference> getIsReplacedByResources() {
         if (isReplacedByResources == null) {
             isReplacedByResources = new ArrayList<>();
         }
         return isReplacedByResources;
     }
 
-    /* (non-Javadoc)
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#setReplacementResources(java.util.List)
-     */
-    @Override
-    public void setReplacementResources(List<IsReplacedByExtension> replacementResources) {
-        this.isReplacedByResources = replacementResources;
+    public void setIsReplacedByResources(List<ExtendedMedicationReference> isReplacedByResources) {
+        this.isReplacedByResources = isReplacedByResources;
     }
 
     /* (non-Javadoc)
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#getReplacedResources()
+     * @see online.medserve.extension.ElementWithHistoricalMedicationReferences#getReplacesResources()
      */
     @Override
-    public List<ReplacesResourceExtension> getReplacedResources() {
-        if (replacesResources == null) {
+    public List<ExtendedMedicationReference> getReplacesResources() {
+        if (isReplacedByResources == null) {
             replacesResources = new ArrayList<>();
         }
         return replacesResources;
     }
 
-    /* (non-Javadoc)
-     * @see online.medserve.extension.ResourceWithHistoricalAssociations#setReplacedResources(java.util.List)
-     */
-    @Override
-    public void setReplacedResources(List<ReplacesResourceExtension> replacedResources) {
-        this.replacesResources = replacedResources;
+    public void setReplacesResources(List<ExtendedMedicationReference> replacesResources) {
+        this.replacesResources = replacesResources;
     }
 
 }

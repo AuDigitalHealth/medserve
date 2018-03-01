@@ -24,9 +24,9 @@ import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
+import online.medserve.FhirCodeSystemUri;
 import online.medserve.extension.ExtendedMedication;
 import online.medserve.extension.MedicationType;
-import online.medserve.transform.util.FhirCodeSystemUri;
 import online.medserve.transform.util.FileUtils;
 
 public class FileWritingMedicationResourceProcessor implements MedicationResourceProcessor {

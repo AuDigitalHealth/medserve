@@ -11,10 +11,10 @@ import java.util.stream.Collectors;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 
+import online.medserve.FhirCodeSystemUri;
 import online.medserve.extension.MedicationType;
 import online.medserve.transform.rxnorm.enumeration.RxNormReltaionshipType;
 import online.medserve.transform.rxnorm.enumeration.RxNormType;
-import online.medserve.transform.util.FhirCodeSystemUri;
 
 public class Concept {
 

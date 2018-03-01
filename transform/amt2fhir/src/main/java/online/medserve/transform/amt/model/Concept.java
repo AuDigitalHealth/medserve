@@ -10,15 +10,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.Medication.MedicationStatus;
+import org.hl7.fhir.dstu3.model.codesystems.SubstanceStatus;
 
+import online.medserve.FhirCodeSystemUri;
 import online.medserve.extension.MedicationType;
 import online.medserve.transform.amt.enumeration.AmtConcept;
 import online.medserve.transform.amt.enumeration.AttributeType;
-import online.medserve.transform.util.FhirCodeSystemUri;
 
 public class Concept {
 
@@ -35,8 +35,8 @@ public class Concept {
     private Date conceptLastModified;
     private Set<Subsidy> subsidies = new HashSet<>();
     private Manufacturer manufacturer;
-    private List<ImmutableTriple<Long, Concept, Date>> replacementConcepts;
-    private List<ImmutableTriple<Long, Concept, Date>> replacedConcepts;
+    private List<ConceptReplacement> replacementConcepts;
+    private List<ConceptReplacement> replacedConcepts;
 
     public Concept(long id, boolean active, Date conceptLastModified) {
         this.id = id;
@@ -272,29 +272,33 @@ public class Concept {
         }
     }
 
-    public MedicationStatus getStatus() {
+    public MedicationStatus getMedicationStatus() {
         return active ? MedicationStatus.ACTIVE : MedicationStatus.ENTEREDINERROR;
+    }
+
+    public SubstanceStatus getSubstanceStatus() {
+        return active ? SubstanceStatus.ACTIVE : SubstanceStatus.ENTEREDINERROR;
     }
 
     public void addReplacementConcept(long type, Concept replacement, Date date) {
         if (replacementConcepts == null) {
             replacementConcepts = new ArrayList<>();
         }
-        replacementConcepts.add(new ImmutableTriple<Long, Concept, Date>(type, replacement, date));
+        replacementConcepts.add(new ConceptReplacement(type, replacement, date));
     }
 
     public void addReplacedConcept(long type, Concept retiredConcept, Date date) {
         if (replacedConcepts == null) {
             replacedConcepts = new ArrayList<>();
         }
-        replacedConcepts.add(new ImmutableTriple<Long, Concept, Date>(type, retiredConcept, date));
+        replacedConcepts.add(new ConceptReplacement(type, retiredConcept, date));
     }
 
-    public List<ImmutableTriple<Long, Concept, Date>> getReplacementConcept() {
+    public List<ConceptReplacement> getReplacementConcept() {
         return replacementConcepts;
     }
 
-    public List<ImmutableTriple<Long, Concept, Date>> getReplacedConcept() {
+    public List<ConceptReplacement> getReplacedConcept() {
         return replacedConcepts;
     }
 
