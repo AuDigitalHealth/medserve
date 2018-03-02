@@ -9,8 +9,8 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import ca.uhn.fhir.model.api.annotation.Description;
 import ca.uhn.fhir.rest.annotation.Count;
 import ca.uhn.fhir.rest.annotation.IdParam;
+import ca.uhn.fhir.rest.annotation.OptionalParam;
 import ca.uhn.fhir.rest.annotation.Read;
-import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.param.StringAndListParam;
@@ -37,9 +37,9 @@ public class OrganizationResourceProvider implements IResourceProvider {
 
     @Search()
     public IBundleProvider searchByText(
-            @RequiredParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
+            @OptionalParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
             @Count Integer theCount) throws IOException {
 
-        return new TextSearchBundleProvider(Organization.class, index, text, null, null, theCount);
+        return new TextSearchBundleProvider(Organization.class, index, null, text, null, null, theCount);
     }
 }

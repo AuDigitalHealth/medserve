@@ -211,11 +211,13 @@ public final class QueryBuilder {
         }
     }
 
-    public static <T extends BaseResource> Builder createTextSearchBuilder(Class<T> clazz, StringAndListParam text,
-            StringOrListParam status, DateAndListParam lastModified) {
+    public static <T extends BaseResource> Builder createTextSearchBuilder(Class<T> clazz, TokenAndListParam code,
+            StringAndListParam text, StringOrListParam status, DateAndListParam lastModified) {
         String resourceType = clazz.getSimpleName().replace("Extended", "").toLowerCase();
         Builder builder = new BooleanQuery.Builder()
             .add(new TermQuery(new Term(FieldNames.RESOURCE_TYPE, resourceType)), Occur.FILTER);
+
+        QueryBuilder.addOptionalCodableConceptAndList(code, builder, FieldNames.CODE);
 
         if (text != null) {
             List<StringOrListParam> queries = text.getValuesAsQueryTokens();
