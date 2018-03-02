@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,10 @@ public class AmtMedicationResourceGenerator {
     private String amtVersion;
 
     FhirValidator validator = FhirContext.forDstu3().newValidator();
+
+    private Map<Long, Reference> referenceCache = new HashMap<>();
+
+    private Map<Long, ExtendedReference> extendedReferenceCache = new HashMap<>();
 
     public AmtMedicationResourceGenerator(Path amtReleaseZipPath, Path pbsExtractPath)
             throws IOException {
@@ -520,24 +525,36 @@ public class AmtMedicationResourceGenerator {
     }
 
     private Reference toReference(Concept concept, String resourceType) {
-        Reference reference =
-                new Reference(resourceType + "/" + concept.getId());
-        reference.setDisplay(concept.getPreferredTerm());
+        Reference reference;
+
+        if (referenceCache.containsKey(concept.getId())) {
+            reference = referenceCache.get(concept.getId());
+        } else {
+            reference = new Reference(resourceType + "/" + concept.getId());
+            reference.setDisplay(concept.getPreferredTerm());
+            referenceCache.put(concept.getId(), reference);
+        }
+
         return reference;
     }
 
     private ExtendedReference toExtendedMedicationReference(Concept concept, List<Resource> createdResources) {
-        ExtendedReference reference =
-                new ExtendedReference("Medication/" + concept.getId());
-        reference.setDisplay(concept.getPreferredTerm());
-        addParentExtensions(concept, reference, new HashSet<>(), createdResources);
-        reference.setMedicationResourceType(concept.getMedicationType().getCode());
-        reference.setMedicationResourceStatus(
-            new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
-        reference.setLastModified(new DateType(concept.getLastModified()));
+        ExtendedReference reference;
+        if (extendedReferenceCache.containsKey(concept.getId())) {
+            reference = extendedReferenceCache.get(concept.getId());
+        } else {
+            reference =
+                    new ExtendedReference("Medication/" + concept.getId());
+            reference.setDisplay(concept.getPreferredTerm());
+            addParentExtensions(concept, reference, new HashSet<>(), createdResources);
+            reference.setMedicationResourceType(concept.getMedicationType().getCode());
+            reference.setMedicationResourceStatus(
+                new Enumeration<MedicationStatus>(new MedicationStatusEnumFactory(), concept.getStatus()));
+            reference.setLastModified(new DateType(concept.getLastModified()));
 
-        addHistoicalAssociations(concept, reference, "Medication");
-
+            addHistoicalAssociations(concept, reference, "Medication");
+            extendedReferenceCache.put(concept.getId(), reference);
+        }
         return reference;
     }
 }

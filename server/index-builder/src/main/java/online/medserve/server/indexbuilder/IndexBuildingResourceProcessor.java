@@ -84,7 +84,7 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
                     new StringField(FieldNames.LAST_MODIFIED, substance.getLastModified().asStringValue(), Store.NO));
                 indexCodeableConcept(document, substance.getCode(), FieldNames.CODE);
             } else if (resource instanceof Organization) {
-                // nothing special here
+                document.add(new StringField(FieldNames.STATUS, "active", Store.NO));
             } else {
                 throw new RuntimeException("Unknown resource type " + resource.getClass().getCanonicalName());
             }

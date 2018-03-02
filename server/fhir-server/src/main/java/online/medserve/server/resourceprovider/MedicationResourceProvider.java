@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Medication;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -15,7 +14,6 @@ import ca.uhn.fhir.rest.annotation.Count;
 import ca.uhn.fhir.rest.annotation.IdParam;
 import ca.uhn.fhir.rest.annotation.OptionalParam;
 import ca.uhn.fhir.rest.annotation.Read;
-import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.param.DateAndListParam;
@@ -23,11 +21,9 @@ import ca.uhn.fhir.rest.param.NumberAndListParam;
 import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
-import ca.uhn.fhir.rest.param.TokenParam;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import online.medserve.extension.ExtendedMedication;
 import online.medserve.server.Util;
-import online.medserve.server.bundleprovider.CodeSearchBundleProvider;
 import online.medserve.server.index.Index;
 import online.medserve.server.indexbuilder.constants.FieldNames;
 
@@ -49,15 +45,8 @@ public class MedicationResourceProvider implements IResourceProvider {
     }
 
     @Search(type = ExtendedMedication.class)
-    public IBundleProvider searchByCode(
-            @RequiredParam(name = ExtendedMedication.SP_CODE) TokenParam code, @Count Integer theCount)
-            throws ParseException, IOException {
-
-        return new CodeSearchBundleProvider(ExtendedMedication.class, index, code, theCount);
-    }
-
-    @Search(type = ExtendedMedication.class)
     public IBundleProvider search(
+            @OptionalParam(name = ExtendedMedication.SP_CODE) @Description(shortDefinition = "Search the resource's codings") TokenAndListParam code,
             @OptionalParam(name = "_text") @Description(shortDefinition = "Search of the resource narrative") StringAndListParam text,
             @OptionalParam(name = FieldNames.PARENT) @Description(shortDefinition = "Deprecated, use ancestor instead. Search for resources covered by but more specific than the specified abstract medication") TokenAndListParam parent,
             @OptionalParam(name = FieldNames.ANCESTOR) @Description(shortDefinition = "Search for resources covered by but more specific than the specified abstract medication") TokenAndListParam ancestor,
@@ -75,7 +64,7 @@ public class MedicationResourceProvider implements IResourceProvider {
             @OptionalParam(name = FieldNames.INGREDIENT_COUNT) @Description(shortDefinition = "Filter on the number of ingredients a Medication has") NumberAndListParam ingredientCount,
             @Count Integer theCount) throws IOException {
         final InstantDt searchTime = InstantDt.withCurrentTime();
-        final int size = index.getMedicationsByParametersSize(ExtendedMedication.class, text, parent, ancestor,
+        final int size = index.getMedicationsByParametersSize(ExtendedMedication.class, code, text, parent, ancestor,
             medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
             subsidyCode, status, lastModified, ingredientCount);
 
@@ -91,7 +80,7 @@ public class MedicationResourceProvider implements IResourceProvider {
                 if (theFromIndex >= size) {
                     return Collections.emptyList();
                 }
-                return index.getMedicationsByParameters(ExtendedMedication.class, text, parent, ancestor,
+                return index.getMedicationsByParameters(ExtendedMedication.class, code, text, parent, ancestor,
                     medicationResourceType, form, container, ingredient, packageItem, brand, isBrand, manufacturer,
                     subsidyCode, status, lastModified, ingredientCount, theFromIndex, theToIndex);
             }
