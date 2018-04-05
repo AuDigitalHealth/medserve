@@ -17,6 +17,7 @@ services:
     environment:
       POLECAT_FHIR_SERVER: ${MEDSERVE_FHIR_BASE}
       POLECAT_SENTRY_DSN: ${POLECAT_SENTRY_DSN}
+      POLECAT_GOOGLE_ANALYTICS_TRACKING_ID: ${POLECAT_GOOGLE_ANALYTICS_TRACKING_ID}
     restart: unless-stopped
   proxy:
     build: medserve-proxy
