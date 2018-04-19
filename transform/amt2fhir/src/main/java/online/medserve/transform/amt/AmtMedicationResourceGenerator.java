@@ -334,7 +334,6 @@ public class AmtMedicationResourceGenerator {
         return reference;
     }
 
-
     private Reference createOrganisation(List<Resource> createdResources, Manufacturer manufacturer) {
         Reference orgRef = new Reference("Organization/" + manufacturer.getCode());
         orgRef.setDisplay(manufacturer.getName());
@@ -364,36 +363,41 @@ public class AmtMedicationResourceGenerator {
     }
 
     private void addSubsidy(ExtendedMedication medication, Subsidy subsidy) {
-        SubsidyExtension subsidyExt = new SubsidyExtension();
-        subsidyExt
-            .setSubsidyCode(new Coding(FhirCodeSystemUri.PBS_SUBSIDY_URI.getUri(), subsidy.getPbsCode(), null));
-        subsidyExt.setProgramCode(new Coding(FhirCodeSystemUri.PBS_PROGRAM_URI.getUri(), subsidy.getProgramCode(),
-            PbsCodeSystemUtil.getProgramCodeDisplay(subsidy.getProgramCode())));
-        subsidyExt.setCommonwealthExManufacturerPrice(new DecimalType(subsidy.getCommExManPrice()));
-        subsidyExt.setManufacturerExManufacturerPrice(new DecimalType(subsidy.getManExManPrice()));
-        subsidyExt
-            .setRestriction(new Coding(FhirCodeSystemUri.PBS_RESTRICTION_URI.getUri(), subsidy.getRestriction(),
-                PbsCodeSystemUtil.getRestrictionCodeDisplay(subsidy.getRestriction())));
-        for (String note : subsidy.getNotes()) {
-            subsidyExt.addNote(new Annotation(new StringType(note)));
-        }
-        for (String caution : subsidy.getCaution()) {
-            subsidyExt.addCautionaryNote(new Annotation(new StringType(caution)));
-        }
+        if (!medication.getSubsidies()
+            .stream()
+            .anyMatch(s -> s.getSubsidyCode().getCode().equals(subsidy.getPbsCode()))) {
 
-        for (Pair<String, String> atcCode : subsidy.getAtcCodes()) {
-            CodeableConcept coding = subsidyExt.getAtcCode();
-            if (coding == null) {
-                coding = new CodeableConcept();
-                subsidyExt.setAtcCode(coding);
+            SubsidyExtension subsidyExt = new SubsidyExtension();
+            subsidyExt
+                .setSubsidyCode(new Coding(FhirCodeSystemUri.PBS_SUBSIDY_URI.getUri(), subsidy.getPbsCode(), null));
+            subsidyExt.setProgramCode(new Coding(FhirCodeSystemUri.PBS_PROGRAM_URI.getUri(), subsidy.getProgramCode(),
+                PbsCodeSystemUtil.getProgramCodeDisplay(subsidy.getProgramCode())));
+            subsidyExt.setCommonwealthExManufacturerPrice(new DecimalType(subsidy.getCommExManPrice()));
+            subsidyExt.setManufacturerExManufacturerPrice(new DecimalType(subsidy.getManExManPrice()));
+            subsidyExt
+                .setRestriction(new Coding(FhirCodeSystemUri.PBS_RESTRICTION_URI.getUri(), subsidy.getRestriction(),
+                    PbsCodeSystemUtil.getRestrictionCodeDisplay(subsidy.getRestriction())));
+            for (String note : subsidy.getNotes()) {
+                subsidyExt.addNote(new Annotation(new StringType(note)));
             }
-            Coding code = coding.addCoding();
-            code.setCode(atcCode.getLeft());
-            code.setDisplay(atcCode.getRight());
-            code.setSystem(FhirCodeSystemUri.ATC_URI.getUri());
-        }
+            for (String caution : subsidy.getCaution()) {
+                subsidyExt.addCautionaryNote(new Annotation(new StringType(caution)));
+            }
 
-        medication.getSubsidies().add(subsidyExt);
+            for (Pair<String, String> atcCode : subsidy.getAtcCodes()) {
+                CodeableConcept coding = subsidyExt.getAtcCode();
+                if (coding == null) {
+                    coding = new CodeableConcept();
+                    subsidyExt.setAtcCode(coding);
+                }
+                Coding code = coding.addCoding();
+                code.setCode(atcCode.getLeft());
+                code.setDisplay(atcCode.getRight());
+                code.setSystem(FhirCodeSystemUri.ATC_URI.getUri());
+            }
+
+            medication.getSubsidies().add(subsidyExt);
+        }
     }
 
     private Reference createProductResource(Concept concept, List<Resource> createdResources) {
