@@ -96,7 +96,7 @@ public class AmtIndexBuilder
     private File getLatestPbsExtract() throws MojoExecutionException {
         try {
             File pbsExtract = new File(syndCacheDirectory, getLatestPbsFileName());
-            URL url = new URL("http://www.pbs.gov.au/downloads/" + getYear() + "/" + getMonth() + "/" + getYear()
+            URL url = new URL("https://www.pbs.gov.au/downloads/" + getYear() + "/" + getMonth() + "/" + getYear()
                     + "-" + getMonth() + "-01-extracts-down-converted.zip");
             if (!pbsExtract.exists()) {
                 getLog().info("Downloading latest PBS file from " + url + " to " + pbsExtract.getAbsolutePath());
