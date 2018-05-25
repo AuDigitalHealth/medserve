@@ -46,6 +46,7 @@ import org.hl7.fhir.dstu3.model.UriType;
 import au.gov.digitalhealth.medserve.extension.ExtendedMedication;
 import au.gov.digitalhealth.medserve.extension.ExtendedReference;
 import au.gov.digitalhealth.medserve.extension.ExtendedSubstance;
+import au.gov.digitalhealth.medserve.extension.GeneralizedMedication;
 import au.gov.digitalhealth.medserve.extension.IsReplacedByExtension;
 import au.gov.digitalhealth.medserve.extension.MedicationIngredientComponentExtension;
 import au.gov.digitalhealth.medserve.extension.MedicationParentExtension;
@@ -68,7 +69,6 @@ import au.gov.digitalhealth.medserve.transform.util.FhirCodeSystemUri;
 import au.gov.digitalhealth.medserve.transform.util.FileUtils;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.validation.FhirValidator;
-import online.medserve.extension.GeneralizedMedication;
 
 public class AmtMedicationResourceGenerator {
     private static final Logger logger = Logger.getLogger(AmtMedicationResourceGenerator.class.getCanonicalName());

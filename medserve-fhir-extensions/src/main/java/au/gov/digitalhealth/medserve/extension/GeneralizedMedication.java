@@ -1,4 +1,4 @@
-package online.medserve.extension;
+package au.gov.digitalhealth.medserve.extension;
 
 import org.hl7.fhir.dstu3.model.BackboneElement;
 import org.hl7.fhir.dstu3.model.Coding;

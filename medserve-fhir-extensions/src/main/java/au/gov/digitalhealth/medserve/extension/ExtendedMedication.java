@@ -15,7 +15,6 @@ import ca.uhn.fhir.model.api.annotation.Description;
 import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.model.api.annotation.ResourceDef;
 import ca.uhn.fhir.util.ElementUtil;
-import online.medserve.extension.GeneralizedMedication;
 
 @ResourceDef(name = "Medication", id = "extendedMedication", profile = ExtendedMedication.PROFILE_URL_BASE
         + "Profile/ExtendedMedication")

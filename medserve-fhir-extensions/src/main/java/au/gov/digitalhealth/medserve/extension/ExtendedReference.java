@@ -16,7 +16,6 @@ import ca.uhn.fhir.model.api.annotation.DatatypeDef;
 import ca.uhn.fhir.model.api.annotation.Description;
 import ca.uhn.fhir.model.api.annotation.Extension;
 import ca.uhn.fhir.util.ElementUtil;
-import online.medserve.extension.GeneralizedMedication;
 
 @DatatypeDef(name = "ExtendedReference", isSpecialization = true, profileOf = Reference.class)
 public class ExtendedReference extends Reference implements ParentExtendedElement, ResourceWithHistoricalAssociations {
