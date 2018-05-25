@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>online.medserve.server</groupId>
+		<groupId>au.gov.digitalhealth.medserve.server</groupId>
 		<artifactId>server-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -21,12 +21,12 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>online.medserve</groupId>
+			<groupId>au.gov.digitalhealth.medserve</groupId>
 			<artifactId>medserve-fhir-extensions</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>online.medserve.server</groupId>
+			<groupId>au.gov.digitalhealth.medserve.server</groupId>
 			<artifactId>index-builder</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -95,7 +95,7 @@
 
 		<plugins>
 			<plugin>
-				<groupId>online.medserve.server</groupId>
+				<groupId>au.gov.digitalhealth.medserve.server</groupId>
 				<artifactId>index-builder</artifactId>
 				<version>${project.version}</version>
 				<configuration>

@@ -5,7 +5,7 @@
 
 	<servlet>
 		<servlet-name>spring</servlet-name>
-		<servlet-class>online.medserve.server.MedFhirServer</servlet-class>
+		<servlet-class>au.gov.digitalhealth.medserve.server.MedFhirServer</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 

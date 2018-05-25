@@ -2,11 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>online.medserve</groupId>
+		<groupId>au.gov.digitalhealth.medserve</groupId>
 		<artifactId>medserve-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<groupId>online.medserve.server</groupId>
+	<groupId>au.gov.digitalhealth.medserve.server</groupId>
 	<artifactId>server-parent</artifactId>
 	<packaging>pom</packaging>
 
