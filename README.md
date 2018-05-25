@@ -4,11 +4,11 @@ Medserve is a FHIR server which serves up Medication, Substance and Organisation
 
 ## How to run it ##
 
-You can run Medserve from prebuilt Docker images on Docker Hub. There is a Docker Compose file in the root of the repository you can use to start up Medserve with its website and Polecat browser.
+You can run Medserve from prebuilt Docker images on Docker Hub built from master by CircleCI. There is a Docker Compose file in the ./server directory you can use to start up Medserve with its website and Polecat browser.
 
-## Building it ##
+## Building it yourself ##
 
-Prequisites include the JDK (obviously), Maven and Docker.
+Building the containers yourself isn't hard. Prequisites include the JDK (obviously), Maven and Docker.
 
 Clone the repository and run
 ```bash

@@ -37,6 +37,7 @@ public class Concept {
     private Manufacturer manufacturer;
     private List<ImmutableTriple<Long, Concept, Date>> replacementConcepts;
     private List<ImmutableTriple<Long, Concept, Date>> replacedConcepts;
+    private Map<String, Concept> leafAncestor = new HashMap<>();
 
     public Concept(long id, boolean active, Date conceptLastModified) {
         this.id = id;
@@ -150,19 +151,19 @@ public class Concept {
         return parents.containsKey(concept.getId());
     }
 
-	public Map<Long, Concept> getParents() {
-		return parents;
-	}
+    public Map<Long, Concept> getParents() {
+        return parents;
+    }
 
-	public String toConceptReference() {
-		return getId() + "|" + getPreferredTerm() + "|";
-	}
+    public String toConceptReference() {
+        return getId() + "|" + getPreferredTerm() + "|";
+    }
 
-	public boolean hasSameDestinations(Concept source, AttributeType relType) {
-		Collection<Concept> setA = getMultipleDestinations(relType);
-		Collection<Concept> setB = source.getMultipleDestinations(relType);
-		return setA.containsAll(setB) && setB.containsAll(setA);
-	}
+    public boolean hasSameDestinations(Concept source, AttributeType relType) {
+        Collection<Concept> setA = getMultipleDestinations(relType);
+        Collection<Concept> setB = source.getMultipleDestinations(relType);
+        return setA.containsAll(setB) && setB.containsAll(setA);
+    }
 
     public void addAncestors(Map<Long, Concept> map) {
         ancestors.putAll(map);
@@ -185,6 +186,31 @@ public class Concept {
             }
         }
         return result;
+    }
+
+    public Concept getLeafAncestor(AmtConcept parentType, AmtConcept currentType) {
+        String cacheKey = parentType.getDisplay() + " " + currentType.getDisplay();
+        if (!leafAncestor.containsKey(cacheKey)) {
+            Set<Concept> leafParents = new HashSet<>();
+
+            leafParents.addAll(getAncestors(parentType).stream()
+                .filter(p -> !AmtConcept.isEnumValue(p.getId()))
+                .filter(p -> p.hasAtLeastOneMatchingAncestor(parentType))
+                .filter(p -> !p.hasAtLeastOneMatchingAncestor(currentType))
+                .collect(Collectors.toSet()));
+
+            Set<Concept> redunantAncestors =
+                    leafParents.stream().flatMap(p -> p.getAncestors(parentType).stream()).collect(Collectors.toSet());
+
+            leafParents.removeAll(redunantAncestors);
+
+            if (leafParents.size() > 1) {
+                throw new RuntimeException("Concept " + this + " has more than one ancestor of type " + parentType);
+            }
+
+            leafAncestor.put(cacheKey, leafParents.iterator().next());
+        }
+        return leafAncestor.get(cacheKey);
     }
 
     @Override
@@ -241,21 +267,42 @@ public class Concept {
         return subsidies;
     }
 
-    public MedicationType getMedicationType() {
+    public AmtConcept getAmtType() {
         if (hasAtLeastOneMatchingAncestor(AmtConcept.CTPP)) {
-            return MedicationType.BrandedPackgeContainer;
+            return AmtConcept.CTPP;
         } else if (hasAtLeastOneMatchingAncestor(AmtConcept.TPP)) {
-            return MedicationType.BrandedPackage;
+            return AmtConcept.TPP;
         } else if (hasAtLeastOneMatchingAncestor(AmtConcept.TPUU)) {
-            return MedicationType.BrandedProductStrengthForm;
+            return AmtConcept.TPUU;
         } else if (hasAtLeastOneMatchingAncestor(AmtConcept.MPP)) {
-            return MedicationType.UnbrandedPackage;
+            return AmtConcept.MPP;
         } else if (hasAtLeastOneMatchingAncestor(AmtConcept.MPUU)) {
-            return MedicationType.UnbrandedProductStrengthForm;
+            return AmtConcept.MPUU;
         } else if (hasAtLeastOneMatchingAncestor(AmtConcept.MP)) {
-            return MedicationType.UnbrandedProduct;
+            return AmtConcept.MP;
+        } else if (hasAtLeastOneMatchingAncestor(AmtConcept.SUBSTANCE)) {
+            return AmtConcept.SUBSTANCE;
         }
-        throw new RuntimeException("Concept " + this + " is not of a known MedicationType");
+        throw new RuntimeException("Concept " + this + " is not of a known AmtConcept type");
+    }
+
+    public MedicationType getMedicationType() {
+        switch (getAmtType()) {
+            case CTPP:
+                return MedicationType.BrandedPackgeContainer;
+            case TPP:
+                return MedicationType.BrandedPackage;
+            case TPUU:
+                return MedicationType.BrandedProductStrengthForm;
+            case MPP:
+                return MedicationType.UnbrandedPackage;
+            case MPUU:
+                return MedicationType.UnbrandedProductStrengthForm;
+            case MP:
+                return MedicationType.UnbrandedProduct;
+            default:
+                throw new RuntimeException("Concept " + this + " is not of a known AmtConcept type");
+        }
     }
 
     public Date getLastModified() {
@@ -296,6 +343,44 @@ public class Concept {
 
     public List<ImmutableTriple<Long, Concept, Date>> getReplacedConcept() {
         return replacedConcepts;
+    }
+
+    public String getResourceType() {
+        switch (getAmtType()) {
+            case MP:
+            case MPUU:
+            case MPP:
+            case TP:
+            case TPUU:
+            case TPP:
+            case CTPP:
+                return "Medication";
+            case SUBSTANCE:
+                return "Substance";
+            default:
+                throw new RuntimeException("Failed to determine resource type for " + this);
+        }
+    }
+
+    public CodeableConcept getBrand() {
+        CodeableConcept brand = null;
+        if (hasAtLeastOneMatchingAncestor(AmtConcept.TP)) {
+            if (getAncestors(AmtConcept.TP)
+                .stream()
+                .filter(c -> !AmtConcept.isEnumValue(c.getId()))
+                .count() > 1) {
+                throw new RuntimeException("more than one TP " + getAncestors(AmtConcept.TP));
+            }
+            brand = getAncestors(AmtConcept.TP)
+                .stream()
+                .filter(c -> !AmtConcept.isEnumValue(c.getId()))
+                .iterator()
+                .next()
+                .toCodeableConcept();
+        } else if (hasAtLeastOneMatchingAncestor(AmtConcept.TPP)) {
+            brand = getSingleDestination(AttributeType.HAS_TP).toCodeableConcept();
+        }
+        return brand;
     }
 
 }

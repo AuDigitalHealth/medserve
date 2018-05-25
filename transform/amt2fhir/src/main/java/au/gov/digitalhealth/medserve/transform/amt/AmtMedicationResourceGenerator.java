@@ -41,6 +41,7 @@ import org.hl7.fhir.dstu3.model.Resource;
 import org.hl7.fhir.dstu3.model.SimpleQuantity;
 import org.hl7.fhir.dstu3.model.StringType;
 import org.hl7.fhir.dstu3.model.Substance.FHIRSubstanceStatus;
+import org.hl7.fhir.dstu3.model.UriType;
 
 import au.gov.digitalhealth.medserve.extension.ExtendedMedication;
 import au.gov.digitalhealth.medserve.extension.ExtendedReference;
@@ -65,11 +66,9 @@ import au.gov.digitalhealth.medserve.transform.amt.model.Subsidy;
 import au.gov.digitalhealth.medserve.transform.processor.MedicationResourceProcessor;
 import au.gov.digitalhealth.medserve.transform.util.FhirCodeSystemUri;
 import au.gov.digitalhealth.medserve.transform.util.FileUtils;
-
-import org.hl7.fhir.dstu3.model.UriType;
-
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.validation.FhirValidator;
+import online.medserve.extension.GeneralizedMedication;
 
 public class AmtMedicationResourceGenerator {
     private static final Logger logger = Logger.getLogger(AmtMedicationResourceGenerator.class.getCanonicalName());
@@ -185,6 +184,8 @@ public class AmtMedicationResourceGenerator {
 
         medication.setMedicationResourceType(concept.getMedicationType().getCode());
 
+        addGeneralizedMedicineExtensions(concept, medication.getGeneralizedMedicine(), createdResources);
+
         addParentExtensions(concept, medication, new HashSet<>(), createdResources);
 
         medication.setIsBrand(concept.getMedicationType().isBranded());
@@ -204,41 +205,63 @@ public class AmtMedicationResourceGenerator {
             }
         }
 
-        if (concept.hasAtLeastOneMatchingAncestor(AmtConcept.TP)) {
-            if (concept.getAncestors(AmtConcept.TP)
-                .stream()
-                .filter(c -> !AmtConcept.isEnumValue(c.getId()))
-                .count() > 1) {
-                throw new RuntimeException("more than one TP " + concept.getAncestors(AmtConcept.TP));
-            }
-            Concept brand = concept.getAncestors(AmtConcept.TP)
-                .stream()
-                .filter(c -> !AmtConcept.isEnumValue(c.getId()))
-                .iterator()
-                .next();
-            medication.setBrand(brand.toCodeableConcept());
-        } else if (concept.hasAtLeastOneMatchingAncestor(AmtConcept.TPP)) {
-            Concept brand = concept.getSingleDestination(AttributeType.HAS_TP);
-            medication.setBrand(brand.toCodeableConcept());
+        CodeableConcept brand = concept.getBrand();
+        if (brand != null) {
+            medication.setBrand(brand);
         }
 
         return medication;
+    }
+
+    private void addGeneralizedMedicineExtensions(Concept concept, List<GeneralizedMedication> list,
+            List<Resource> createdResources) {
+        Concept c = concept;
+
+        if (c.hasAtLeastOneMatchingAncestor(AmtConcept.CTPP)) {
+            c = concept.getLeafAncestor(AmtConcept.TPP, AmtConcept.CTPP);
+            list.add(new GeneralizedMedication(toReference(c, "Medication"), c.getMedicationType().getCode()));
+        }
+
+        if (c.hasAtLeastOneMatchingAncestor(AmtConcept.TPP)) {
+            c = concept.getLeafAncestor(AmtConcept.MPP, AmtConcept.TPP);
+            list.add(new GeneralizedMedication(toReference(c, "Medication"), c.getMedicationType().getCode()));
+        }
+
+        if (c.hasAtLeastOneMatchingAncestor(AmtConcept.TPUU)) {
+            c = concept.getLeafAncestor(AmtConcept.MPUU, AmtConcept.TPUU);
+            list.add(new GeneralizedMedication(toReference(c, "Medication"), c.getMedicationType().getCode()));
+        }
+
+        if (c.hasAtLeastOneMatchingAncestor(AmtConcept.MPUU)) {
+            c = concept.getLeafAncestor(AmtConcept.MP, AmtConcept.MPUU);
+            list.add(new GeneralizedMedication(toReference(c, "Medication"), c.getMedicationType().getCode()));
+        }
     }
 
     private void addHistoicalAssociations(Concept concept, ResourceWithHistoricalAssociations resource,
             String resourceType) {
         if (concept.getReplacementConcept() != null) {
             for (ImmutableTriple<Long, Concept, Date> replacement : concept.getReplacementConcept()) {
+                String targetResourceType = replacement.middle.getResourceType();
+                if (!targetResourceType.equals(resourceType)) {
+                    logger.warning("AMT concept replacement " + replacement.middle + " for concept " + concept
+                            + "is not of the same type!!!");
+                }
                 resource.getReplacementResources()
-                    .add(new IsReplacedByExtension(toReference(replacement.middle, resourceType),
+                    .add(new IsReplacedByExtension(toReference(replacement.middle, targetResourceType),
                         AmtConcept.fromId(replacement.left).toCoding(), new DateType(replacement.right)));
             }
         }
 
         if (concept.getReplacedConcept() != null) {
             for (ImmutableTriple<Long, Concept, Date> replaced : concept.getReplacedConcept()) {
+                String targetResourceType = replaced.middle.getResourceType();
+                if (!targetResourceType.equals(resourceType)) {
+                    logger.warning("AMT concept replacement " + concept + " for concept " + replaced.middle
+                            + "is not of the same type!!!");
+                }
                 resource.getReplacedResources()
-                    .add(new ReplacesResourceExtension(toReference(replaced.middle, resourceType),
+                    .add(new ReplacesResourceExtension(toReference(replaced.middle, targetResourceType),
                         AmtConcept.fromId(replaced.left).toCoding(), new DateType(replaced.right)));
             }
         }
@@ -559,6 +582,13 @@ public class AmtMedicationResourceGenerator {
             reference.setLastModified(new DateType(concept.getLastModified()));
 
             addHistoicalAssociations(concept, reference, "Medication");
+
+            addGeneralizedMedicineExtensions(concept, reference.getGeneralizedMedicine(), createdResources);
+
+            CodeableConcept brand = concept.getBrand();
+            if (brand != null) {
+                reference.setBrand(brand);
+            }
             extendedReferenceCache.put(concept.getId(), reference);
         }
         return reference;
