@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/AuDigitalHealth/medserve.svg?style=shield)](https://circleci.com/gh/AuDigitalHealth/medserve)
+
 # Medserve #
 
 Medserve is a FHIR server which serves up Medication, Substance and Organisation resources built from terminology and other data sources. At present it serves a set of Medication resources which are built from AMT with PBS data blended in...more to come.
