@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hl7.fhir.dstu3.model.CodeableConcept;
 import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.DateType;
 import org.hl7.fhir.dstu3.model.Enumeration;
@@ -27,6 +28,12 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
             + "StructureDefinition/parentMedicationResources", definedLocally = false, isModifier = false)
     @Description(shortDefinition = "A collections of medication resources that represent an abstraction of this medication resource")
     private List<MedicationParentExtension> parentMedicationResources;
+
+    @Child(name = "generalizedMedicine", min = 1, max = Child.MAX_UNLIMITED, summary = true)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/generalizedMedicine", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "A 'leaf-most' medication resources that represent an abstraction of this medication resource")
+    private List<GeneralizedMedication> generalizedMedicine;
 
     /**
      * A code that indicates the level of abstraction of the medication
@@ -73,6 +80,14 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     @Description(shortDefinition = "Resources that this resource has replaced")
     private List<ReplacesResourceExtension> replacesResources;
 
+    /**
+     * A CodeableConcept for the medication brand
+     */
+    @Child(name = "brand", min = 0, max = 1, summary = false)
+    @Extension(url = PROFILE_URL_BASE + "StructureDefinition/brand", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "A CodeableConcept to identify the brand of the medication if it is branded")
+    private CodeableConcept brand;
+
     public ExtendedReference() {}
 
     public ExtendedReference(String theReference) {
@@ -82,7 +97,7 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     @Override
     public boolean isEmpty() {
         return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, medicationResourceStatus, lastModified,
-            isReplacedByResources, replacesResources);
+            isReplacedByResources, replacesResources, generalizedMedicine, brand);
     }
 
     @Override
@@ -157,6 +172,25 @@ public class ExtendedReference extends Reference implements ParentExtendedElemen
     @Override
     public void setReplacedResources(List<ReplacesResourceExtension> replacedResources) {
         this.replacesResources = replacedResources;
+    }
+
+    public CodeableConcept getBrand() {
+        return brand;
+    }
+
+    public void setBrand(CodeableConcept brand) {
+        this.brand = brand;
+    }
+
+    public List<GeneralizedMedication> getGeneralizedMedicine() {
+        if (generalizedMedicine == null) {
+            generalizedMedicine = new ArrayList<>();
+        }
+        return generalizedMedicine;
+    }
+
+    public void setGeneralizedMedicine(List<GeneralizedMedication> generalizedMedicine) {
+        this.generalizedMedicine = generalizedMedicine;
     }
 
 }

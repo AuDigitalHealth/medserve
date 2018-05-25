@@ -29,6 +29,12 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     @Description(shortDefinition = "A collections of medication resources that represent an abstraction of this medication resource")
     private List<MedicationParentExtension> parentMedicationResources;
 
+    @Child(name = "generalizedMedicine", min = 1, max = Child.MAX_UNLIMITED, summary = true)
+    @Extension(url = PROFILE_URL_BASE
+            + "StructureDefinition/generalizedMedicine", definedLocally = false, isModifier = false)
+    @Description(shortDefinition = "A 'leaf-most' medication resources that represent an abstraction of this medication resource")
+    private List<GeneralizedMedication> generalizedMedicine;
+
     /**
      * A code that indicates the level of abstraction of the medication
      */
@@ -92,7 +98,7 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     @Override
     public boolean isEmpty() {
         return super.isEmpty() && ElementUtil.isEmpty(medicationResourceType, parentMedicationResources, brand,
-            sourceCodeSystem, subsidies, lastModified, isReplacedByResources, replacesResources);
+            sourceCodeSystem, subsidies, lastModified, isReplacedByResources, replacesResources, generalizedMedicine);
     }
 
     @Override
@@ -198,6 +204,17 @@ public class ExtendedMedication extends Medication implements IBaseResource, Par
     @Override
     public void setReplacedResources(List<ReplacesResourceExtension> replacedResources) {
         this.replacesResources = replacedResources;
+    }
+
+    public List<GeneralizedMedication> getGeneralizedMedicine() {
+        if (generalizedMedicine == null) {
+            generalizedMedicine = new ArrayList<>();
+        }
+        return generalizedMedicine;
+    }
+
+    public void setGeneralizedMedicine(List<GeneralizedMedication> generalizedMedicine) {
+        this.generalizedMedicine = generalizedMedicine;
     }
 
 }
