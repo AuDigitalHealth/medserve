@@ -96,8 +96,7 @@ public class AmtIndexBuilder
     private File getLatestPbsExtract() throws MojoExecutionException {
         try {
             File pbsExtract = new File(syndCacheDirectory, getLatestPbsFileName());
-            URL url = new URL("https://www.pbs.gov.au/downloads/" + getYear() + "/" + getMonth() + "/" + getYear()
-                    + "-" + getMonth() + "-01-extracts-down-converted.zip");
+            URL url = new URL("https://www.pbs.gov.au/downloads/" + getYear() + "/" + getMonth() + "/" + getLatestPbsFileName());
             if (!pbsExtract.exists()) {
                 getLog().info("Downloading latest PBS file from " + url + " to " + pbsExtract.getAbsolutePath());
                 FileUtils.copyURLToFile(url, pbsExtract);
@@ -112,7 +111,7 @@ public class AmtIndexBuilder
     }
 
     private String getLatestPbsFileName() {
-        return getYear() + "-" + getMonth() + "-01-extracts-down-converted.zip";
+        return getYear() + "-" + getMonth() + "-01-down.zip";
     }
 
     private String getMonth() {
