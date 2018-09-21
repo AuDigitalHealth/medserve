@@ -2,7 +2,15 @@
 
 # Medserve #
 
-Medserve is a FHIR server which serves up Medication, Substance and Organisation resources built from terminology and other data sources. At present it serves a set of Medication resources which are built from AMT with PBS data blended in...more to come.
+Medserve is an *experimental* FHIR server *prototype* which serves up Medication, Substance and Organisation resources built from terminology and other data sources. At present it serves a set of Medication resources which are built from AMT with PBS data blended in. Future plans involve importing TGA data, dm+d and RxNorm.
+
+Medserve is currently *not* part of any production infrastructure.
+
+Medserve has been built to explore the idea of presenting medicines terminologies (AMT, dm+d, RxNorm...etc) via a common API (FHIR). This is intended to make it easier
+ - to implement each individually through an API rather than starting from native file formats and building supporting infrastructure
+ - and to implement multiple medicines terminologies because there is a common API to each of them
+
+Feedback is very much appreciated to help guide where this project should go - please raise an issue with any feedback on the concept, implementation, API etc.
 
 ## How to run it ##
 
