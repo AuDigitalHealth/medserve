@@ -9,27 +9,30 @@
 	<groupId>au.gov.digitalhealth.medserve.server</groupId>
 	<artifactId>server-parent</artifactId>
 	<packaging>pom</packaging>
+	<properties>
+		<lucene-version>7.5.0</lucene-version>
+	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
-			<version>6.4.2</version>
+			<version>${lucene-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-analyzers-common</artifactId>
-			<version>6.4.2</version>
+			<version>${lucene-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-queryparser</artifactId>
-			<version>6.4.2</version>
+			<version>${lucene-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-backward-codecs</artifactId>
-			<version>6.4.2</version>
+			<version>${lucene-version}</version>
 		</dependency>
 	</dependencies>
 

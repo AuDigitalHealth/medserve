@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.2.2</version>
+			<version>1.2.3</version>
 		</dependency>
 
 		<!-- Needed for JEE/Servlet support -->
@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>org.thymeleaf</groupId>
 			<artifactId>thymeleaf</artifactId>
-			<version>3.0.2.RELEASE</version>
+			<version>3.0.11.RELEASE</version>
 		</dependency>
 
 		<!-- You may not need this if you are deploying to an application server 
@@ -61,14 +61,14 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.1.1</version>
+			<version>2.5.0</version>
 		</dependency>
 
 		<!-- Required to enable the CORS interceptor within HAPI, see: http://hapifhir.io/doc_cors.html -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
-			<version>4.3.9.RELEASE</version>
+			<version>5.0.8.RELEASE</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>commons-logging</artifactId>
@@ -79,12 +79,12 @@
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>1.6.4</version>
+			<version>1.7.14</version>
 		</dependency>
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry-logback</artifactId>
-			<version>1.1.0</version>
+			<version>1.7.10</version>
 		</dependency>
 	</dependencies>
 
