@@ -10,7 +10,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
+import org.apache.lucene.analysis.core.WhitespaceTokenizerFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.IntPoint;
@@ -56,7 +58,11 @@ public class IndexBuildingResourceProcessor implements MedicationResourceProcess
         parser.setPrettyPrint(false);
 
         Directory dir = FSDirectory.open(outputDirectory.toPath());
-        Analyzer analyzer = new StandardAnalyzer();
+        Analyzer analyzer = CustomAnalyzer.builder()
+            .withTokenizer(WhitespaceTokenizerFactory.class)
+            .addTokenFilter(LowerCaseFilterFactory.class)
+            .build();
+
         IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         this.writer = new IndexWriter(dir, iwc);
