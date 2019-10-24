@@ -31,9 +31,6 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - setup_remote_docker:   # (2)
-          docker_layer_caching: true # (3)
-
       - run: mkdir -p $HOME/terminology 
       - run: mvn -s settings.xml -B clean deploy -P '!docker' -Dsynd.cache.dir=$HOME/terminology 
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
