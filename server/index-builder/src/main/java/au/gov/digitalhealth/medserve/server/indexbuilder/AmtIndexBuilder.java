@@ -111,7 +111,7 @@ public class AmtIndexBuilder
     }
 
     private String getLatestPbsFileName() {
-        return getYear() + "-" + getMonth() + "-01-extracts-down-converted.zip";
+        return getYear() + "-" + getMonth() + "-01-V2-down-converted.zip";
     }
 
     private String getMonth() {
