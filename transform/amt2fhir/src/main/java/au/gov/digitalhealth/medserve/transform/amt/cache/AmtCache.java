@@ -78,18 +78,23 @@ public class AmtCache {
 
         Files.walkFileTree(pbsExtract.getPath("/"), visitor);
 
-        FileUtils.readFile(visitor.getManufacturerFile(), s -> handleManufacturerFile(s), false, "!");
-        FileUtils.readFile(visitor.getNoteFile(), s -> handleNoteFile(s), false, "\t");
-        FileUtils.readFile(visitor.getCautionFile(), s -> handleCautionFile(s), false, "\t");
-        FileUtils.readFile(visitor.getAtcFile(), s -> handleAtcFile(s), false, "!");
-        FileUtils.readFile(visitor.getAmtFile(), s -> handlePbsAmtFile(s), false, "!");
-        FileUtils.readFile(visitor.getDrugFile(), s -> handlePbsDrugFile(s), false, "!");
-        FileUtils.readFile(visitor.getIndicationFile(), s -> handleLinkFile(s), false, "\t");
+        FileUtils.readFile(visitor.getManufacturerFile(), s -> handleManufacturerFile(s), true, "!");
+        FileUtils.readFile(visitor.getNoteFile(), s -> handleNoteFile(s), true, "\t");
+        FileUtils.readFile(visitor.getCautionFile(), s -> handleCautionFile(s), true, "\t");
+        FileUtils.readFile(visitor.getAtcFile(), s -> handleAtcFile(s), true, "!");
+        FileUtils.readFile(visitor.getAmtFile(), s -> handlePbsAmtFile(s), true, "!");
+        FileUtils.readFile(visitor.getDrugFile(), s -> handlePbsDrugFile(s), true, "!");
+        FileUtils.readFile(visitor.getIndicationFile(), s -> handleLinkFile(s), true, "\t");
     }
 
     private void handleLinkFile(String[] s) {
-        String pbsCode = s[0];
+    	// FIXME!!
+        // Currently PBS LinkExtract file is missing the Note ID and Caution ID columns!
+        /*
+    	
+    	String pbsCode = s[0];
         Collection<Subsidy> list = subsidies.get(pbsCode);
+        
         if (list != null) {
             String noteId = s[5];
             String cautionId = s[6];
@@ -99,7 +104,8 @@ public class AmtCache {
                 subsidy.addCaution(caution.get(cautionId));
             }
         }
-
+        
+		*/
     }
 
     private void handleCautionFile(String[] s) {
@@ -134,13 +140,13 @@ public class AmtCache {
         String programCode = row[0];
         String pbsCode = row[1];
         String manufacturerCode = row[2];
-        long tppId = Long.parseLong(row[9]);
+        long tppId = Long.parseLong(row[13]);
         Long mppId = null;
-        if (!row[6].isEmpty()) {
-            mppId = Long.parseLong(row[6]);
+        if (!row[9].isEmpty()) {
+            mppId = Long.parseLong(row[9]);
         }
-        String commExManPrice = row[13];
-        String manExManPrice = row[14];
+        String commExManPrice = row[18];	// "cemp-tpp"
+        String manExManPrice = row[20];		// "memp-tpp"
         Concept tpp = conceptCache.get(tppId);
         if (tpp == null) {
             logger.warning("No such TPP " + tppId + " for PBS code " + pbsCode);
